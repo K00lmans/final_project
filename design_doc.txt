@@ -1,0 +1,11 @@
+This file contains a basic outline of how the code will function to serve as a reference for those working on it.
+Nothing in this document is fixed, static, or unchangeable by anyone working on this project.
+
+UI:
+The UI will have two parts, the main play area which will represent the board and all the information usually on the
+board in the physical game, and a separate window which will have a notepad which the player can keep track of their
+information on. The button for making the final guess will be on the notepad window while the one for making an
+information gathering guess will be in the main window.
+
+Data Structures:
+The layout of the rooms will be stored as a tree data structure will all adjacent rooms being linked together.
