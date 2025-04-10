@@ -1,0 +1,10 @@
+build
+.vscode
+.idea
+.vs
+obj
+bin
+.DS_Store
+out
+.cache
+# if you think of anything else to .gitignore please lmk

@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.30)
-project(pa9)
+project(i-havent-a-clue CXX)
 
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 20)
+add_custom_target(client)
+add_custom_target(server)
 
-add_executable(pa9 main.cpp
-        Location.cpp
-        Location.h)
+add_subdirectory(client)
+add_subdirectory(server)
+
+add_dependencies(client client-bin)
+add_dependencies(server server-bin)
+
