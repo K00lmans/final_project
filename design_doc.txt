@@ -19,7 +19,7 @@ Available targets:
 `server` - builds just server
 
 Both the client and server can be run independently.
-The client executable is located in build/client, and the server executable is located in build/server.
+The client executable is located in build/client-bin, and the server executable is located in build/server-bin.
 
 -- Client Architecture --
 
@@ -34,6 +34,6 @@ The layout of the rooms will be stored as a tree data structure will all adjacen
 
 -- Server Architecture --
 
-The server listens on port <to be determine> and uses a protocol described below.
+The server listens on port 55555 and uses a protocol described below.
 
 Protocol: <working on it>
