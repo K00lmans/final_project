@@ -7,4 +7,6 @@ bin
 .DS_Store
 out
 .cache
+*.swp
+*.pdf
 # if you think of anything else to .gitignore please lmk
