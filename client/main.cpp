@@ -5,7 +5,7 @@
  *
  *An implementation of the game of Clue™ (or Cluedo™ if your weird)
  *
- *This program is dedicated to my (Kodiak's) dad, who in 19XX was working towards a degree in computer science. The
+ *This program is dedicated to my (Kodiak's) dad, who in 1981 was working towards a degree in computer science. The
  *final project for the class he was taking at the time was to program a game of Clue™. Of course, since it was "Ye
  *Olden Times" he had no fancy languages to do it in, and instead was required to do it entirely in assembly (the
  *horror!). He was able to finish the project, but left with some less than positive feelings about the game. Of course,
