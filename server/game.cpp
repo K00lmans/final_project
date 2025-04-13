@@ -44,7 +44,7 @@ bool Game::shutdown_callback() {
     std::array<struct epoll_event, EPOLL_ARR_SIZE> epoll_arr;
     std::array<char, TEMP_BUF_SIZE> readbuf;
     int num_shutdown = epoll_wait(poll_fd, epoll_arr.data(), EPOLL_ARR_SIZE, 0);
-    for (int i = 0; i < num_shutdown) {
+    for (int i = 0; i < num_shutdown; ++i) {
         ssize_t readval = read(epoll_arr[i].data.fd, readbuf.data(), TEMP_BUF_SIZE);
     }
 }
