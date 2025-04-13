@@ -16,7 +16,7 @@ add_executable(client-bin
 )
 
 target_link_libraries(client-bin PRIVATE SFML::Graphics)
-add_target_properties(client-bin PROPERTIES
+set_target_properties(client-bin PROPERTIES
     CXX_VERSION 17
     CXX_EXTENSIONS OFF
 )
