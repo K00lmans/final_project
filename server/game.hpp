@@ -4,6 +4,7 @@
 #include <string>
 #include <unistd.h>
 #include <sys/epoll.h>
+#include "input-buffer.hpp"
 
 
 class Game {
@@ -57,6 +58,7 @@ class Game {
         int fd;
         ConnectionState state;
         std::string character;
+        InputBuffer<512> inbuf;
     };
 
     std::size_t max_message_len;
