@@ -30,14 +30,12 @@ class Shutdown {
         WaitingZeroRead
     };
     struct Socket {
-        Socket(int sock_fd) {
-            
-        }
-        SockState state;
+        Socket(int sock_fd) : sock_fd(sock_fd) {}
+        SockState state = SendingMsg;
         int sock_fd;
         int timer_fd;
     };
     int epfd;
-
-
 };
+
+
