@@ -16,11 +16,11 @@
 class Scratch_Pad {
     sf::RenderWindow window;
 
+public: // I'm actually using private member stuff, wooooooooo
     explicit Scratch_Pad(sf::Vector2u window_size);
 
     ~Scratch_Pad();
 
-public: // I'm actually using private member stuff, wooooooooo
     void update();
 };
 
