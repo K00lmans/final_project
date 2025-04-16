@@ -1,5 +1,8 @@
 #pragma once
 
+// NOT_IMPLEMENTED
+// NO_TESTS
+
 // 
 // Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
 //

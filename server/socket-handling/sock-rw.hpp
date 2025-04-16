@@ -1,6 +1,7 @@
 #pragma once
 #include <sys/uio.h>
 #include <utility>
+// NO_TESTS
 
 
 // This file contains "exhaustive" versions of the standard unix read/write functions.

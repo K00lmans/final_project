@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include "callback.hpp"
 
+// NOT_IMPLEMENTED
+
 void Callback::add(int fd, int event_type, std::shared_ptr<Event> event) {
     int op = 0;
     if (items.count(fd)) {

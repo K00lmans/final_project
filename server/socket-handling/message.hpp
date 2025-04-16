@@ -3,6 +3,8 @@
 #include <string>
 #include <sys/uio.h>
 
+// NO_TESTS
+
 class Message {
     public:
     Message() = delete;

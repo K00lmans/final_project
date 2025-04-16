@@ -4,6 +4,8 @@
 #include <climits>
 #include "sock-rw.hpp"
 
+// NO_TESTS
+
 // This InputBuffer is a ring buffer.
 // The implementation isn't great, and there's a lot of fiddling to make it work
 // Idk if ring buffers just are this way or if I'm missing something obvious, lol.

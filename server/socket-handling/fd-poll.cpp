@@ -31,11 +31,19 @@ FdPoll &FdPoll::operator=(FdPoll &&poll) {
     return *this;
 }
 
-int FdPoll::ctl(int op, int fd, epoll_event &event) {
-    return epoll_ctl(epfd, op, fd, &event);
+void FdPoll::ctl(int op, int fd, epoll_event &event) {
+    errno = 0;
+    if (epoll_ctl(epfd, op, fd, &event) == -1) {
+        throw std::system_error(errno, std::generic_category(), "Could not run epoll_ctl on epoll instance.");
+    }
 }
 
 int FdPoll::wait(std::span<epoll_event> &events, int timeout) {
-    return epoll_wait(epfd, events.data(), events.size(), timeout);
+    errno = 0;
+    int retval = epoll_wait(epfd, events.data(), events.size(), timeout);
+    if (retval == -1) {
+        throw std::system_error(errno, std::generic_category(), "Could not wait on epoll instance.");
+    }
+    return retval;
 }
 

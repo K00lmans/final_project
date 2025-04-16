@@ -1,5 +1,6 @@
 #include "output-buffer.hpp"
 #include <climits>
+// NOT_IMPLEMENTED
 
 std::optional<SocketStatus> OutputBuffer::flush(int fd) {
     if (outbuf.empty()) {

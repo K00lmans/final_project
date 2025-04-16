@@ -1,5 +1,7 @@
 #pragma once
 
+// NO_TESTS
+
 //
 // Maintainer: Athena Boose
 //
@@ -21,7 +23,9 @@ class FdPoll {
     FdPoll(FdPoll &&poll);
     FdPoll &operator=(FdPoll &&poll);
 
-    int ctl(int op, int fd, epoll_event &event);
+    void ctl(int op, int fd, epoll_event &event);
+
+    // Will never return -1 (instead throws exception)
     int wait(std::span<epoll_event> &events, int timeout);
 
     // convenience overloads
