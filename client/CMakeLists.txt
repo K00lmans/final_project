@@ -13,10 +13,12 @@ add_executable(client-bin
         main.cpp
         Location.cpp
         Location.h
+        Scratch_Pad.cpp
+        Scratch_Pad.h
 )
 
 target_link_libraries(client-bin PRIVATE SFML::Graphics)
 set_target_properties(client-bin PROPERTIES
-    CXX_VERSION 17
+    CXX_VERSION 26
     CXX_EXTENSIONS OFF
 )

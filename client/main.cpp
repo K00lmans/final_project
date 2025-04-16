@@ -19,22 +19,24 @@
  */
 
 #include <SFML/Graphics.hpp>
+#include "Scratch_Pad.h"
 
 int main() {
-    auto window = sf::RenderWindow(sf::VideoMode({1920u, 1080u}), "CMake SFML Project");
-    window.setFramerateLimit(144);
+    const auto screen_size = sf::VideoMode::getDesktopMode().size;
+    auto main_game_window = sf::RenderWindow(sf::VideoMode({screen_size.x / 2, screen_size.y / 2}), "Clue");
+    std::unique_ptr<Scratch_Pad> current_users_pad;
 
-    while (window.isOpen())
-    {
-        while (const std::optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-            {
-                window.close();
+    while (main_game_window.isOpen()) {
+        while (const std::optional event = main_game_window.pollEvent()) {
+            if (event->is<sf::Event::Closed>()) {
+                main_game_window.close();
             }
         }
 
-        window.clear();
-        window.display();
+        main_game_window.clear();
+        main_game_window.display();
+        if (current_users_pad != nullptr) {
+            current_users_pad->update();
+        }
     }
 }
