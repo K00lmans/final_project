@@ -7,6 +7,7 @@
 #include "Tile.hpp"
 #include "TokenID.hpp"
 #include "Token.hpp"
+#include "BoardData.hpp"
 
 using namespace std;
 
@@ -121,14 +122,13 @@ void addCharacterFromStream(istream& boardFile, Board& newBoard) {
 
 Board getBoardFromFile() { // THIS IS MEANT TO READ THE FILE INTO A BOARD OBJECT!! REFACTOR!!
 	string dataLine;
-	ifstream boardFile;
-	boardFile.open("board_data.txt");
+	stringstream boardFile(board_string);
 
 	Board newBoard =  Board();
 
 	
 
-	if (!boardFile.is_open()) {
+	if (boardFile.fail()) {
 		return newBoard;
 	}
 
