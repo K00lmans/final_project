@@ -1,16 +1,15 @@
 cmake_minimum_required(VERSION 3.28)
 
-
-
 add_library(socket-handling
     sock-rw.hpp
     sock-rw.cpp
     message.hpp
     output-buffer.hpp
+    output-buffer.cpp
     input-buffer.hpp
+    fd-poll.hpp
+    fd-poll.cpp
+    shutdown.hpp
 )
 
-set_target_properties(socket-handling PROPERTIES
-    CXX_VERSION 23
-    CXX_EXTENSIONS OFF
-)
+target_compile_features(socket-handling PUBLIC cxx_std_23)
