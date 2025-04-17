@@ -59,14 +59,14 @@ ssize_t read(int fd, void *buf, size_t count) {
         errno = EBADF;
         return -1;
     }
-
-
-    size_t read_amt = 0;
-    size_t max_readable = (count > num_to_read) ? num_to_read : count;
     if (num_to_read == 0) {
         errno = (rand() % 2 == 0) ? EAGAIN : EWOULDBLOCK; // alternate returning EAGAIN/EWOULDBLOCK to check for portability
         return -1;
     }
+
+
+    size_t read_amt = 0;
+    size_t max_readable = (count > num_to_read) ? num_to_read : count;
     if (test_type == RwOption::RwData) {
         read_amt = max_readable;
     }
@@ -93,13 +93,13 @@ ssize_t write(int fd, void *buf, size_t count) {
         errno = EBADF;
         return -1;
     }
-
-    size_t write_amt = 0;
-    size_t max_writeable = (count > num_to_write) ? num_to_write : count;
     if (num_to_write == 0) {
         errno = (rand() % 2 == 0) ? EAGAIN : EWOULDBLOCK; // alternate returning EAGAIN/EWOULDBLOCK to check for portability
         return -1;
     }
+
+    size_t write_amt = 0;
+    size_t max_writeable = (count > num_to_write) ? num_to_write : count;
     if (test_type == RwOption::RwData) {
         write_amt = max_writeable;
     }
@@ -135,13 +135,13 @@ ssize_t readv(int fd, const struct iovec *iov, int iovcnt) {
         errno = EBADF;
         return -1;
     }
-
-    size_t max_readable = (total > num_to_read) ? num_to_read : total;
-    size_t read_amt = 0;
     if (num_to_read == 0) {
         errno = (rand() % 2 == 0) ? EAGAIN : EWOULDBLOCK; // alternate returning EAGAIN/EWOULDBLOCK to check for portability
         return -1;
     }
+
+    size_t max_readable = (total > num_to_read) ? num_to_read : total;
+    size_t read_amt = 0;
     if (test_type == RwOption::RwData) {
         read_amt = max_readable;
     }
@@ -175,14 +175,14 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt) {
         errno = EBADF;
         return -1;
     }
-
-
-    size_t write_amt = 0;
-    size_t max_writeable = (total > num_to_write) ? num_to_write : total;
     if (num_to_write == 0) {
         errno = (rand() % 2 == 0) ? EAGAIN : EWOULDBLOCK; // alternate returning EAGAIN/EWOULDBLOCK to check for portability
         return -1;
     }
+
+
+    size_t write_amt = 0;
+    size_t max_writeable = (total > num_to_write) ? num_to_write : total;
     if (test_type == RwOption::RwData) {
         write_amt = max_writeable;
     }
