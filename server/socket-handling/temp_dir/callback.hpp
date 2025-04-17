@@ -29,7 +29,6 @@ class Event {
     virtual bool callback(Callback &caller, int condition) = 0;
 };
 
-
 class Callback {
     public:
     void add(int fd, int event_type, std::shared_ptr<Event> event);
