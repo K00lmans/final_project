@@ -21,21 +21,22 @@
 #include <SFML/Graphics.hpp>
 #include "Scratch_Pad.h"
 #include <iostream>
-#include "GameCode\Token.hpp"
-#include "GameCode\TokenID.hpp"
-#include "GameCode\Board.hpp"
-#include "GameCode\Room.hpp"
-#include "GameCode\BoardSetup.hpp"
-#include "GameCode\Player.hpp"
+#include "GameCode/Token.hpp"
+#include "GameCode/TokenID.hpp"
+#include "GameCode/Board.hpp"
+#include "GameCode/Room.hpp"
+#include "GameCode/BoardSetup.hpp"
+#include "GameCode/Player.hpp"
 
 
-int main() {
+[[noreturn]] int main() {
     /*
     const auto screen_size = sf::VideoMode::getDesktopMode().size;
-    auto main_game_window = sf::RenderWindow(sf::VideoMode({screen_size.x / 2, screen_size.y / 2}), "Clue");
-    std::unique_ptr<Scratch_Pad> current_users_pad;
+    auto main_game_window = sf::RenderWindow(sf::VideoMode({screen_size.x / 2, screen_size.y / 2}), "Clue",
+                                             sf::Style::Close);
+    Scratch_Pad *current_users_pad = nullptr;
 
-    while (main_game_window.isOpen()) {
+    while (main_game_window.isOpen()) { // Main game loop
         while (const std::optional event = main_game_window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 main_game_window.close();
@@ -54,12 +55,12 @@ int main() {
     }
     */
 
-    Token Ms_Scarlet = Token(TokenID::MS_SCARLET);
-    Token Col_Mustard = Token(TokenID::COL_MUSTARD);
-    Token Prof_Plum = Token(TokenID::PROF_PLUM);
-    Token Mr_Green = Token(TokenID::MR_GREEN);
-    Token Mrs_Peacock = Token(TokenID::MRS_PEACOCK);
-    Token Mrs_White = Token(TokenID::MRS_WHITE);
+    auto Ms_Scarlet = Token(TokenID::MS_SCARLET);
+    auto Col_Mustard = Token(TokenID::COL_MUSTARD);
+    auto Prof_Plum = Token(TokenID::PROF_PLUM);
+    auto Mr_Green = Token(TokenID::MR_GREEN);
+    auto Mrs_Peacock = Token(TokenID::MRS_PEACOCK);
+    auto Mrs_White = Token(TokenID::MRS_WHITE);
 
     //Board clue_board = Board();
     Board clue_board = getBoardFromFile();
@@ -76,9 +77,11 @@ int main() {
     player1.setPosition(Tile(6, 15));
     clue_board.placeToken(Mrs_Peacock, Tile(6, 15));
 
-    while (1) {
+    while (true) {
         clue_board.displayBoard();
         player1.movePlayer(clue_board);
         system("cls");
     }
+
+    return 0;
 }
