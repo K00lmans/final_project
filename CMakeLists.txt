@@ -5,13 +5,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug) # change to Release when building a release!!
 include(CTest)
 
-
-add_custom_target(client)
-add_custom_target(server)
-
 add_subdirectory(client)
 add_subdirectory(server)
-
-add_dependencies(client client-bin)
-add_dependencies(server server-bin)
 

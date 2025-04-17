@@ -51,7 +51,7 @@ std::pair<ssize_t, SocketStatus> exhaustive_writev(int fd, const struct iovec *i
     int iov_index = 0;
     ssize_t total_written = 0;
     std::size_t eintr_count = 0;
-    std::vector<iovec> iovs(iovcnt);
+    std::vector<iovec> iovs;
     for (int i = 0; i < iovcnt; ++i) {
         iovs.push_back(iov[i]);
     }
