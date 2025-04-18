@@ -28,22 +28,28 @@
 #include "GameCode/BoardSetup.hpp"
 #include "GameCode/Player.hpp"
 
+// Global varibles
+double window_scaler = .75; // The scaler for the y size of the window based on the users screen
+double background_size[2] = {1162.0, 1159.0}; // Size in pixels of the background image
+
 // Just putting these here for now, probably should be moved later
 unsigned int get_window_x_size(const sf::Vector2u size) {
-    return static_cast<unsigned int>(((size.y * .75) * (1162.0 / 1159.0)));
+    return static_cast<unsigned int>(((size.y * window_scaler) * (background_size[0] / background_size[1])));
 }
 
 int main() {
     const auto screen_size = sf::VideoMode::getDesktopMode().size;
     auto main_game_window = sf::RenderWindow(sf::VideoMode({
                                                  get_window_x_size(screen_size),
-                                                 static_cast<unsigned>(screen_size.y * .75)
+                                                 static_cast<unsigned>(screen_size.y * window_scaler)
                                              }), "Clue", sf::Style::Close);
     auto background_image = sf::Texture("graphics/clue_board.jpg");
     background_image.setSmooth(true); // Should be fine since it is the background
     auto background = sf::Sprite(background_image);
     background.setScale({
-        static_cast<float>(get_window_x_size(screen_size) / 1162.0), static_cast<float>(screen_size.y * .75 / 1159.0)
+        // The numbers are the size of the background image in pixels
+        static_cast<float>(get_window_x_size(screen_size) / background_size[0]),
+        static_cast<float>(screen_size.y * window_scaler / background_size[1])
     });
     Scratch_Pad *current_users_pad = nullptr;
 
