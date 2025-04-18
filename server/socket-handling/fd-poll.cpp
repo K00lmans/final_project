@@ -3,6 +3,15 @@
 #include <system_error>
 #include "fd-poll.hpp"
 
+//
+// Maintainer: Athena Boose
+//
+// Description: A handy, RAII wrapper for an epoll instance.
+//
+// Tags:
+//
+// NO_TESTS
+
 FdPoll::FdPoll() {
     errno = 0;
     if (epfd == -1) {

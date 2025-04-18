@@ -1,12 +1,14 @@
 #pragma once
 
-// NO_TESTS
 
 //
 // Maintainer: Athena Boose
 //
 // Description: A handy, RAII wrapper for an epoll instance.
 //
+// Tags:
+//
+// NO_TESTS
 
 #include <sys/epoll.h>
 #include <vector>

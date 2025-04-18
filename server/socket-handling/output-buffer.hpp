@@ -1,12 +1,21 @@
 #pragma once
-// NOT_IMPLEMENTED
-// NO_TESTS
 
 #include <deque>
 #include <memory>
 #include <optional>
 #include <string>
 #include "sock-rw.hpp"
+
+// 
+// Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
+//
+// Description: Allows for adding "messages" to an output queue.
+//              When flush() is called, as many as possible will be sent.
+//
+// Tags: 
+//
+// NOT_IMPLEMENTED
+// NO_TESTS
 
 
 class OutputBuffer {
