@@ -32,13 +32,14 @@
 [[noreturn]] int main() {
     /*
     const auto screen_size = sf::VideoMode::getDesktopMode().size;
-    auto main_game_window = sf::RenderWindow(sf::VideoMode({screen_size.x / 2, screen_size.y / 2}), "Clue",
+    auto main_game_window = sf::RenderWindow(sf::VideoMode({screen_size.x * .75, screen_size.y *.75}), "Clue",
                                              sf::Style::Close);
     Scratch_Pad *current_users_pad = nullptr;
 
     while (main_game_window.isOpen()) { // Main game loop
         while (const std::optional event = main_game_window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
+                delete current_users_pad;
                 main_game_window.close();
             }
         }

@@ -8,12 +8,11 @@
 
 #include "Scratch_Pad.h"
 
-Scratch_Pad::Scratch_Pad(sf::Vector2u window_size, const int player_num) {
-    window = sf::RenderWindow(sf::VideoMode({window_size.x / 4, static_cast<unsigned>(window_size.y * .8)}),
+Scratch_Pad::Scratch_Pad(const sf::Vector2u window_size, const int player_num) {
+    window = sf::RenderWindow(sf::VideoMode({window_size.x / 5, static_cast<unsigned>(window_size.y * .8)}),
                               "Scratch Pad", sf::Style::None);
     filepath = "scratch_pads/player_" + std::to_string(player_num) + ".txt";
-    std::ifstream file(filepath);
-    if (!file.is_open()) {
+    if (std::ifstream file(filepath); !file.is_open()) {
         // If there is an error opening the file, just don't. This will cause an error and crash the program.
         // This is good. I swear.
         delete this;
@@ -23,11 +22,16 @@ Scratch_Pad::Scratch_Pad(sf::Vector2u window_size, const int player_num) {
             written_data.push_back(line);
         }
         file.close();
+        written_data.pop_back(); // Removes the extra newline because I can't be bothered to make a way not to add it
     }
 }
 
 Scratch_Pad::~Scratch_Pad() {
-    // Code to store data here
+    std::ofstream file(filepath);
+    for (const auto & i : written_data) {
+        file << i << std::endl;
+    }
+    file.close();
     window.close();
 }
 
@@ -35,6 +39,6 @@ Scratch_Pad::~Scratch_Pad() {
 void Scratch_Pad::update() {
     while (const std::optional event = window.pollEvent()) {
     }
-    window.clear();
+    window.clear(sf::Color(225, 198, 153)); // A pleasant shade of beige
     window.display();
 }

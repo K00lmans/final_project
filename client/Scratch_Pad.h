@@ -18,6 +18,7 @@ class Scratch_Pad {
     sf::RenderWindow window;
     std::string filepath; // The location of the specific file that this object saves and loads to
     std::vector<std::string> written_data; // The information the user has written in the scratch pad
+    int selected_box = -1;
 
 public: // I'm actually using private member stuff, wooooooooo
     explicit Scratch_Pad(sf::Vector2u window_size, int player_num);
