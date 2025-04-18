@@ -28,15 +28,27 @@
 #include "GameCode/BoardSetup.hpp"
 #include "GameCode/Player.hpp"
 
+// Just putting these here for now, probably should be moved later
+unsigned int get_window_x_size(const sf::Vector2u size) {
+    return static_cast<unsigned int>(((size.y * .75) * (1162.0 / 1159.0)));
+}
 
-[[noreturn]] int main() {
-    /*
+int main() {
     const auto screen_size = sf::VideoMode::getDesktopMode().size;
-    auto main_game_window = sf::RenderWindow(sf::VideoMode({screen_size.x * .75, screen_size.y *.75}), "Clue",
-                                             sf::Style::Close);
+    auto main_game_window = sf::RenderWindow(sf::VideoMode({
+                                                 get_window_x_size(screen_size),
+                                                 static_cast<unsigned>(screen_size.y * .75)
+                                             }), "Clue", sf::Style::Close);
+    auto background_image = sf::Texture("graphics/clue_board.jpg");
+    background_image.setSmooth(true); // Should be fine since it is the background
+    auto background = sf::Sprite(background_image);
+    background.setScale({
+        static_cast<float>(get_window_x_size(screen_size) / 1162.0), static_cast<float>(screen_size.y * .75 / 1159.0)
+    });
     Scratch_Pad *current_users_pad = nullptr;
 
-    while (main_game_window.isOpen()) { // Main game loop
+    while (main_game_window.isOpen()) {
+        // Main game loop
         while (const std::optional event = main_game_window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 delete current_users_pad;
@@ -45,16 +57,12 @@
         }
 
         main_game_window.clear();
-
-        // graphics go HERE!!
-        
-
+        main_game_window.draw(background);
         main_game_window.display();
         if (current_users_pad != nullptr) {
             current_users_pad->update();
         }
     }
-    */
 
     auto Ms_Scarlet = Token(TokenID::MS_SCARLET);
     auto Col_Mustard = Token(TokenID::COL_MUSTARD);
@@ -67,10 +75,9 @@
     Board clue_board = getBoardFromFile();
 
 
-
     Player player1 = Player(Mrs_Peacock, Tile(0, 18));
 
-    int* board_visualization = clue_board.getBoard();
+    int *board_visualization = clue_board.getBoard();
 
     cout << endl << endl; // REMOVE LATER!!
 

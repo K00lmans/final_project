@@ -13,9 +13,10 @@ Scratch_Pad::Scratch_Pad(const sf::Vector2u window_size, const int player_num) {
                               "Scratch Pad", sf::Style::None);
     filepath = "scratch_pads/player_" + std::to_string(player_num) + ".txt";
     if (std::ifstream file(filepath); !file.is_open()) {
-        // If there is an error opening the file, just don't. This will cause an error and crash the program.
-        // This is good. I swear.
-        delete this;
+        // If there is an error opening the file, just lose the data
+        for (int items = 0; items < 21; items++) {
+            written_data.emplace_back("");
+        }
     } else {
         std::string line;
         while (std::getline(file, line)) {
