@@ -28,8 +28,8 @@
 #include "GameCode/BoardSetup.hpp"
 #include "GameCode/Player.hpp"
 
-// Global varibles
-double window_scaler = .75; // The scaler for the y size of the window based on the users screen
+// Global variables
+double window_scaler = .75; // The scaler for the y size of the window based on the users screen. Can not be 1 or greater
 double background_size[2] = {1162.0, 1159.0}; // Size in pixels of the background image
 
 // Just putting these here for now, probably should be moved later
@@ -51,13 +51,13 @@ int main() {
         static_cast<float>(get_window_x_size(screen_size) / background_size[0]),
         static_cast<float>(screen_size.y * window_scaler / background_size[1])
     });
-    Scratch_Pad *current_users_pad = nullptr;
+    auto current_users_pad = std::make_unique<Scratch_Pad>(screen_size, 1);
 
     while (main_game_window.isOpen()) {
         // Main game loop
         while (const std::optional event = main_game_window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
-                delete current_users_pad;
+                current_users_pad.reset();
                 main_game_window.close();
             }
         }
