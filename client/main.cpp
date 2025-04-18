@@ -47,7 +47,6 @@ int main() {
     background_image.setSmooth(true); // Should be fine since it is the background
     auto background = sf::Sprite(background_image);
     background.setScale({
-        // The numbers are the size of the background image in pixels
         static_cast<float>(get_window_x_size(screen_size) / background_size[0]),
         static_cast<float>(screen_size.y * window_scaler / background_size[1])
     });
