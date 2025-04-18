@@ -4,12 +4,20 @@
 #include <climits>
 #include "sock-rw.hpp"
 
+// 
+// Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
+// 
+// Description: A ring buffer for queueing input messages.
+//              This is intended to be used in situations where messages have a fixed, maximum size.
+//              For maximum efficiency, set the size to be one less than a power of 2 so the compiler can optimize modulus to bitwise-AND
+//
+//              This implementation kinda sucks, but it does at least seem to work.
+//
+// Tags:
+//
 // NO_TESTS
+//
 
-// This InputBuffer is a ring buffer.
-// The implementation isn't great, and there's a lot of fiddling to make it work
-// Idk if ring buffers just are this way or if I'm missing something obvious, lol.
-// For maximum efficiency, set the buffer size to one less than a power of 2 so the compiler can optimize the modulus to a bitwise-AND.
 template <std::size_t buffer_size>
 class InputBuffer {
     static_assert(IOV_MAX >= 2); // if somehow IOV_MAX is lower than 2, this should not compile

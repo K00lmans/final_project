@@ -1,9 +1,10 @@
 #pragma once
 #include <sys/uio.h>
 #include <utility>
-// NO_TESTS
 
-
+// 
+// Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
+//
 // This file contains "exhaustive" versions of the standard unix read/write functions.
 // These functions will write until one of the following occurs:
 //

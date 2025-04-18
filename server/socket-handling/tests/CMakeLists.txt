@@ -5,7 +5,7 @@ add_library(sockfuncs sockfuncs.cpp sockfuncs.hpp)
 add_executable(test-sockfuncs test-sockfuncs.cpp)
 target_link_libraries(test-sockfuncs sockfuncs)
 
-add_executable(test-sock-rw sock-rw.cpp)
+add_executable(test-sock-rw test-sock-rw.cpp)
 target_link_libraries(test-sock-rw sockfuncs socket-handling)
 
 add_test(

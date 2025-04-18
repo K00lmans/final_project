@@ -10,10 +10,7 @@
 //
 
 #include <cstddef>
-#include <unordered_map>
 #include <memory>
-#include <event2/event.h>
-#include "message.hpp"
 
 template <std::size_t EPOLL_BUF_SIZE = 16, std::size_t CLOSE_TIME_MS = 60000>
 class Shutdown {
@@ -23,8 +20,8 @@ class Shutdown {
 
     // Gracefully shuts down the socket. 
     // Assuming no errors occur, any messages already sent to the socket will be fully sent before the socket is actually closed
-    void shutdown(evutil_socket_t fd);
-    void shutdown(evutil_socket_t fd, std::shared_ptr<Message> closing_msg);
+    void shutdown(int fd);
+    void shutdown(int fd, std::shared_ptr<std::string> closing_msg);
 
     private:
     enum SockState {
