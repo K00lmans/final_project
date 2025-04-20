@@ -38,6 +38,7 @@ Clone this project, navigate to its directory in terminal, and enter `cmake -B b
 You can then enter `cmake --build build` to build the project.
 The server executable will be located at `./build/server/server-bin`.
 You can run the server's unit tests with `ctest --test-dir build`, and if you have `valgrind` installed, you can use `ctest -T memcheck --test-dir build` to check for memory leaks.
+(Source code for tests is located in various tests/ folders scattered throughout the server/ directory.)
 
 ## More Build Info
 

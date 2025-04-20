@@ -42,7 +42,6 @@ class Shutdown {
         ClosingSocket(ClosingSocket &&) = default;
         ClosingSocket &operator=(ClosingSocket &&) = default;
 
-        SockState state = SendingMsg;
         Timer timer;
         OutputBuffer outbuf;
         int sock_fd;
@@ -62,11 +61,12 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&ou
         epoll_event ev{ .events = EPOLLOUT | EPOLLRDHUP, .data = {.fd = fd} };
         switch (status) {
         case SocketStatus::Finished:
-            sock.status = WaitingZeroRead;
-            ev.events = EPOLLIN | EPOLLRDHUP;
+            ev.events = EPOLLRDHUP;
         case SocketStatus::Blocked:
             sock.timer.set(CLOSE_TIME_MS);
             poll.ctl(EPOLL_CTL_ADD, fd, ev);
+            ev.events = EPOLLIN;
+            poll.ctl(EPOLL_CTL_ADD, sock.timer.fd(), ev); // making the timerfd "point" to the fd of the socket we want to close; epoll will tell us how to find the proper stuff in our hashmap
             map.insert(std::pair(fd, std::move(sock)));
             break;
         case SocketStatus::ZeroReturned:
@@ -91,7 +91,39 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::callback() {
         poll.wait(std::span(event_list))
     );
     for (const epoll_event &ev : events) {
-        ClosingSocket &sock = map[ev.data.fd];
-        // do shit
+        epoll_event temp_ev;
+
+        if (ev.events & EPOLLRDHUP || // socket has sent us the 0-byte read
+            ev.events & EPOLLERR || // socket has broken somehow
+            ev.events & EPOLLHUP ||
+            ev.events & EPOLLIN // timer went off
+        ) {
+            // exception here means the epoll this class relies on is cooked, so it's reasonable to terminate the server
+            // in future I'd probably do better error handling than this but hey it shouuuld work fine so I don't care
+            poll.ctl(EPOLL_CTL_DEL, ev.data.fd, temp_ev);
+            poll.ctl(EPOLL_CTL_DEL, map[ev.data.fd].timer.fd(), temp_ev);
+            close_except(ev.data.fd);
+            // timerfd destructs automatically, thank you RAII
+            map.erase(ev.data.fd);
+            continue;
+        }
+
+        SocketStatus status = map[ev.data.fd].outbuf.flush(ev.data.fd);
+        switch (status) {
+        case SocketStatus::Finished:
+            temp_ev.events = EPOLLRDHUP;
+            poll.ctl(EPOLL_CTL_MOD, ev.data.fd, temp_ev);
+            break;
+        case SocketStatus::Blocked:
+            break;
+        case SocketStatus::ZeroReturned:
+        case SocketStatus::Error:
+            poll.ctl(EPOLL_CTL_DEL, ev.data.fd, temp_ev);
+            poll.ctl(EPOLL_CTL_DEL, map[ev.data.fd].timer.fd(), temp_ev);
+            close_except(ev.data.fd);
+            // timerfd destructs automatically, thank you RAII
+            map.erase(ev.data.fd);
+            break;
+        }
     }
 }
