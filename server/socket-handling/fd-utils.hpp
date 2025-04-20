@@ -33,7 +33,7 @@ void close_except(int fd);
 enum class SocketStatus {
     Finished,
     Blocked,
-    ZeroRead,
+    ZeroReturned,
     Error,
 };
 

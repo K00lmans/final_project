@@ -33,7 +33,7 @@ std::pair<ssize_t, SocketStatus> exhaustive_readv(int fd, const struct iovec *io
 
         // check for the morbillion error states
         if (readval == 0) {
-            return std::pair(total_read, SocketStatus::ZeroRead);
+            return std::pair(total_read, SocketStatus::ZeroReturned);
         }
         if (readval == -1 && errno == EINTR && eintr_count < MAX_ALLOWED_EINTR) {
             ++eintr_count;
@@ -75,7 +75,7 @@ std::pair<ssize_t, SocketStatus> exhaustive_writev(int fd, const struct iovec *i
 
         // check for the morbillion error states
         if (writeval == 0) {
-            return std::pair(total_written, SocketStatus::ZeroRead);
+            return std::pair(total_written, SocketStatus::ZeroReturned);
         }
         if (writeval == -1 && errno == EINTR && eintr_count < MAX_ALLOWED_EINTR) {
             ++eintr_count;

@@ -18,7 +18,7 @@ static void test_input_buffer(void) {
     test_type = RwOption::RwZero;
     retval = buf.buf_read(123);
     assert(retval.has_value());
-    assert(retval.value() == SocketStatus::ZeroRead);
+    assert(retval.value() == SocketStatus::ZeroReturned);
     assert(buf.empty());
     assert(!buf.full());
     assert(buf.size() == 0);
