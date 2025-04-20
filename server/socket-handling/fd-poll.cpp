@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <system_error>
 #include "fd-poll.hpp"
+#include "fd-utils.hpp"
 
 //
 // Maintainer: Athena Boose
@@ -21,7 +22,7 @@ FdPoll::FdPoll() {
 
 FdPoll::~FdPoll() {
     if (epfd != -1) {
-        close(epfd);
+        close_except(epfd);
     }
 }
 
@@ -32,7 +33,7 @@ FdPoll::FdPoll(FdPoll &&poll) : epfd(poll.epfd) {
 FdPoll &FdPoll::operator=(FdPoll &&poll) {
     if (&poll != this) {
         if (epfd != -1) {
-            close(epfd);
+            close_except(epfd);
         }
         epfd = poll.epfd;
         poll.epfd = -1;

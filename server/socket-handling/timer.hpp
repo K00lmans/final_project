@@ -1,7 +1,5 @@
 #pragma once
 
-// NOT_IMPLEMENTED
-// NO_TESTS
 
 // 
 // Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
@@ -9,21 +7,17 @@
 // Description:
 // Provides a convenient, RAII interface to the POSIX timerfd interface.
 //
+// Tags:
+//
+// NOT_IMPLEMENTED
+// NO_TESTS
 //
 
-#include <sys/timerfd.h>
-
-
-constexpr static inline timespec ms_to_timespec(int num_ms) {
-    return {
-        .tv_sec = num_ms / 1000, 
-        .tv_nsec = (num_ms % 1000) * 1000000000
-    };
-}
 
 class Timer {
     public:
-    Timer();
+    Timer(); // creates and does not set timer
+    Timer(int num_ms); // creates and sets timer
     ~Timer();
 
     Timer(const Timer &) = delete;
