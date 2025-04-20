@@ -91,6 +91,17 @@ class InputBuffer {
         // should assert that amount <= size()!!!
         start = mod(start + amount);
     }
+    // i'd do this properly and return a C++20 range/view/whatever but i couldn't be bothered
+    // Returns the end-index of a message in the buffer, if it exists.
+    // The '\n' at the end of the message is included.
+    std::optional<std::size_t> get_msg_end() const {
+        for (std::size_t i = 0; i < size(); ++i) {
+            if (operator[](i) == '\n') {
+                return std::optional(i + 1);
+            }
+        }
+        return std::optional<std::size_t>(std::nullopt);
+    }
 
     private:
     InputBuffer(const InputBuffer &) = default;
