@@ -13,10 +13,6 @@
 //
 //              This implementation kinda sucks, but it does at least seem to work.
 //
-// Tags:
-//
-// NO_TESTS
-//
 
 template <std::size_t buffer_size>
 class InputBuffer {
