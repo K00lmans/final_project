@@ -12,14 +12,19 @@
 // - The socket would have blocked with EAGAIN/EWOULDBLOCK
 // - The socket encountered some sort of fatal error (check errno to see what exactly)
 //
-// All functions return a std::pair containing the amount of data sent, combined with a status code.
+// All functions return a std::pair containing the amount of data sent/read, combined with a status code in the form of a SocketStatus enum.
+// The amount of data sent will be 0 if no data was sent (maybe 0 was returned, maybe an error happened, maybe the socket blocked immediately) or it will be some positive number. It's only a ssize_t because that's what readv/writev/read/write return.
+//
+// To find out the state of the socket, you must check the SocketStatus enum.
+// This is a bit clunky, but since most of these states (a.) need to be handled separately and (b.) aren't exceptional, a status code was a better choice than an enum. (If only C++ had proper sum types [std::variant is less clear here imo])
+//
 // It's ugly but it works; it communicates all information about socket status up the chain.
 //
 //
 // At present, exhaustive_read and exhaustive_write literally just call exhaustive_readv/writev because I couldn't be bothered to duplicate code.
 
 enum class SocketStatus {
-    FullySent,
+    Finished,
     Blocked,
     ZeroRead,
     Error,

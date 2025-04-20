@@ -12,13 +12,13 @@ void test_exhaustive_readv(void) {
         iovec{.iov_base = malloc(111), .iov_len = 111}
     };
     auto result = exhaustive_readv(123, iovs.data(), 4);
-    assert(result.first == -1);
+    assert(result.first == 0);
     assert(result.second == SocketStatus::Blocked);
 
     test_type = RwOption::Err;
 
     result = exhaustive_readv(123, iovs.data(), 4);
-    assert(result.first == -1);
+    assert(result.first == 0);
     assert(result.second == SocketStatus::Error);
 
     test_type = RwOption::RwZero;
@@ -32,14 +32,20 @@ void test_exhaustive_readv(void) {
 
     result = exhaustive_readv(123, iovs.data(), 4);
     assert(result.first == 1234 + 567 + 890 + 111);
-    assert(result.second == SocketStatus::FullySent);
+    assert(result.second == SocketStatus::Finished);
     
     test_type = RwOption::RwData;
     num_to_read = 14321;
 
     result = exhaustive_readv(123, iovs.data(), 4);
     assert(result.first == 1234 + 567 + 890 + 111);
-    assert(result.second == SocketStatus::FullySent);
+    assert(result.second == SocketStatus::Finished);
+
+    num_to_read = 143;
+
+    result = exhaustive_readv(123, iovs.data(), 4);
+    assert(result.first == 143);
+    assert(result.second == SocketStatus::Blocked);
 
     times_to_throw_eintr = 42;
     test_type = RwOption::RwRand;
@@ -47,7 +53,7 @@ void test_exhaustive_readv(void) {
 
     result = exhaustive_readv(123, iovs.data(), 4);
     assert(result.first == 1234 + 567 + 890 + 111);
-    assert(result.second == SocketStatus::FullySent);
+    assert(result.second == SocketStatus::Finished);
 
     free(iovs[0].iov_base);
     free(iovs[1].iov_base);
@@ -63,13 +69,13 @@ void test_exhaustive_writev(void) {
         iovec{.iov_base = malloc(111), .iov_len = 111}
     };
     auto result = exhaustive_writev(123, iovs.data(), 4);
-    assert(result.first == -1);
+    assert(result.first == 0);
     assert(result.second == SocketStatus::Blocked);
 
     test_type = RwOption::Err;
 
     result = exhaustive_writev(123, iovs.data(), 4);
-    assert(result.first == -1);
+    assert(result.first == 0);
     assert(result.second == SocketStatus::Error);
 
     test_type = RwOption::RwZero;
@@ -83,14 +89,20 @@ void test_exhaustive_writev(void) {
 
     result = exhaustive_writev(123, iovs.data(), 4);
     assert(result.first == 1234 + 567 + 890 + 111);
-    assert(result.second == SocketStatus::FullySent);
+    assert(result.second == SocketStatus::Finished);
     
     test_type = RwOption::RwData;
     num_to_write = 14321;
 
     result = exhaustive_writev(123, iovs.data(), 4);
     assert(result.first == 1234 + 567 + 890 + 111);
-    assert(result.second == SocketStatus::FullySent);
+    assert(result.second == SocketStatus::Finished);
+    
+    num_to_write = 143;
+
+    result = exhaustive_writev(123, iovs.data(), 4);
+    assert(result.first == 143);
+    assert(result.second == SocketStatus::Blocked);
 
     times_to_throw_eintr = 42;
     test_type = RwOption::RwRand;
@@ -98,7 +110,7 @@ void test_exhaustive_writev(void) {
 
     result = exhaustive_writev(123, iovs.data(), 4);
     assert(result.first == 1234 + 567 + 890 + 111);
-    assert(result.second == SocketStatus::FullySent);
+    assert(result.second == SocketStatus::Finished);
 
     free(iovs[0].iov_base);
     free(iovs[1].iov_base);

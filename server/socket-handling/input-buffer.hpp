@@ -22,17 +22,17 @@ template <std::size_t buffer_size>
 class InputBuffer {
     static_assert(IOV_MAX >= 2); // if somehow IOV_MAX is lower than 2, this should not compile
     public:
-    constexpr InputBuffer() noexcept {}
+    InputBuffer() noexcept {}
 
-    constexpr InputBuffer(InputBuffer &&buf) = default;
-    constexpr InputBuffer &operator=(InputBuffer &&buf) = default;
+    InputBuffer(InputBuffer &&buf) = default;
+    InputBuffer &operator=(InputBuffer &&buf) = default;
 
-    constexpr char &operator[](const size_t index) noexcept { return buffer[mod(start + index)]; }
-    constexpr const char &operator[](const size_t index) const noexcept { return buffer[mod(start + index)]; }
+    char &operator[](const size_t index) noexcept { return buffer[mod(start + index)]; }
+    const char &operator[](const size_t index) const noexcept { return buffer[mod(start + index)]; }
 
-    constexpr std::size_t empty() const { return start == end; }
-    constexpr std::size_t full() const { return mod(end + 1) == start;}
-    constexpr std::size_t size() const {
+    std::size_t empty() const { return start == end; }
+    std::size_t full() const { return mod(end + 1) == start;}
+    std::size_t size() const {
         if (empty()) {
             return 0;
         }
@@ -69,27 +69,27 @@ class InputBuffer {
         }
         else if (start == 0) {
             iov[0].iov_len = truesize() - end - 1; // leave an empty spot at buffer end
-            iov[0].iov_base = end;
+            iov[0].iov_base = iov.data() + end;
             iovcnt = 1;
         }
         else if (start == 1) {
             iov[0].iov_len = truesize() - end;
-            iov[0].iov_base = end; // fill it all up, we have space
+            iov[0].iov_base = iov.data() + end; // fill it all up, we have space
             iovcnt = 1;
         }
         else {
             iov[0].iov_len = truesize() - end;
-            iov[0].iov_base = end;
+            iov[0].iov_base = iov.data() + end;
             iov[1].iov_len = start - 1;
             iov[1].iov_base = iov.data();
             iovcnt = 2;
         }
         auto retval = exhaustive_readv(fd, iov.data(), iovcnt);
         if (retval.first == -1 || retval.first == 0) {
-            return retval.second;
+            return std::optional(retval.second);
         }
         end = mod(end + retval.first);
-        return retval.second;
+        return std::optional(retval.second);
     }
     void pop_front(std::size_t amount) {
         // should assert that amount <= size()!!!
@@ -97,8 +97,8 @@ class InputBuffer {
     }
 
     private:
-    constexpr InputBuffer(const InputBuffer &) = default;
-    constexpr InputBuffer &operator=(const InputBuffer &) = default;
+    InputBuffer(const InputBuffer &) = default;
+    InputBuffer &operator=(const InputBuffer &) = default;
 
     constexpr static std::size_t mod(const std::size_t val) noexcept { return val % (truesize()); }
     constexpr static std::size_t truesize() noexcept { return buffer_size + 1; }
