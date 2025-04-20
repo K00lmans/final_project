@@ -41,10 +41,10 @@ std::pair<ssize_t, SocketStatus> exhaustive_readv(int fd, const struct iovec *io
             continue;
         }
         if (readval == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            return std::pair(-1, SocketStatus::Blocked);
+            return std::pair(total_read, SocketStatus::Blocked);
         }
         if (readval == -1) {
-            return std::pair(-1, SocketStatus::Error);
+            return std::pair(total_read, SocketStatus::Error);
         }
         while (readval > 0) {
             if (iovs[iov_index].iov_len <= (size_t)readval) {
@@ -60,7 +60,7 @@ std::pair<ssize_t, SocketStatus> exhaustive_readv(int fd, const struct iovec *io
             }
         }
     }
-    return std::pair(total_read, SocketStatus::FullySent);
+    return std::pair(total_read, SocketStatus::Finished);
 }
 
 std::pair<ssize_t, SocketStatus> exhaustive_writev(int fd, const struct iovec *iov, int iovcnt) {
@@ -83,10 +83,10 @@ std::pair<ssize_t, SocketStatus> exhaustive_writev(int fd, const struct iovec *i
             continue;
         }
         if (writeval == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            return std::pair(-1, SocketStatus::Blocked);
+            return std::pair(total_written, SocketStatus::Blocked);
         }
         if (writeval == -1) {
-            return std::pair(-1, SocketStatus::Error);
+            return std::pair(total_written, SocketStatus::Error);
         }
         while (writeval > 0) {
             if (iovs[iov_index].iov_len <= (size_t)writeval) {
@@ -102,6 +102,6 @@ std::pair<ssize_t, SocketStatus> exhaustive_writev(int fd, const struct iovec *i
             }
         }
     }
-    return std::pair(total_written, SocketStatus::FullySent);
+    return std::pair(total_written, SocketStatus::Finished);
 }
 
