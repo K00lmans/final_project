@@ -18,7 +18,23 @@ class Scratch_Pad {
     sf::RenderWindow window;
     std::string filepath; // The location of the specific file that this object saves and loads to
     std::vector<std::string> written_data; // The information the user has written in the scratch pad
+
+    sf::Font font = sf::Font("graphics/NotoSans-Black.ttf");
+    unsigned int text_size = 1;
+    // The text on the left side of the scratch pad that indicates items, rooms, and people
+    sf::Text left_side_text = sf::Text(font, "Colonel Mustard\nMiss Scarlet\nProfessor Plum\nMr. Green\n"
+                                             "Mrs. White\nMrs. Peacock\nRope\nLead Pipe\nKnife\nWrench\nCandlestick\n"
+                                             "Revolver\nBottle of Poison\nStudy\nHall\nLounge\nDining Room\nKitchen\n"
+                                             "Ballroom\nConservatory\nBilliard Room\nLibrary", text_size);
+
+    sf::RectangleShape base_box;
+    std::vector<sf::RectangleShape> grid;
+
     int selected_box = -1;
+
+    void draw_grid();
+
+    void draw_text();
 
 public: // I'm actually using private member stuff, wooooooooo
     explicit Scratch_Pad(sf::Vector2u window_size, int player_num);
