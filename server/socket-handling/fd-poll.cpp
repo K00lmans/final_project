@@ -48,12 +48,12 @@ void FdPoll::ctl(int op, int fd, epoll_event &event) {
     }
 }
 
-int FdPoll::wait(std::span<epoll_event> &events, int timeout) {
+std::span<epoll_event> FdPoll::wait(std::span<epoll_event> events, int timeout) {
     errno = 0;
     int retval = epoll_wait(epfd, events.data(), events.size(), timeout);
     if (retval == -1) {
         throw std::system_error(errno, std::generic_category(), "Could not wait on epoll instance.");
     }
-    return retval;
+    return std::span(events.first(retval));
 }
 

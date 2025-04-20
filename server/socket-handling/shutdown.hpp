@@ -14,6 +14,7 @@
 #include <utility>
 #include <unordered_map>
 #include <iostream>
+#include <array>
 #include "output-buffer.hpp"
 #include "timer.hpp"
 #include "fd-poll.hpp"
@@ -49,6 +50,7 @@ class Shutdown {
 
     std::unordered_map<int, ClosingSocket> map;
     FdPoll poll;
+    std::array<epoll_event, EPOLL_BUF_SIZE> event_list;
 };
 
 
@@ -83,4 +85,13 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&ou
     }
 }
 
-
+template <std::size_t EPOLL_BUF_SIZE, std::size_t CLOSE_TIME_MS>
+void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::callback() {
+    std::span<epoll_event> events(
+        poll.wait(std::span(event_list))
+    );
+    for (const epoll_event &ev : events) {
+        ClosingSocket &sock = map[ev.data.fd];
+        // do shit
+    }
+}
