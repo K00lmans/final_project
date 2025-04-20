@@ -6,7 +6,6 @@
 // Description:
 // Cleanly sends a closing message to any added sockets before properly calling shutdown() and then close() on them.
 //
-// NOT_IMPLEMENTED
 // NO_TESTS
 
 #include <cstddef>
