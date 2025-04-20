@@ -1,6 +1,5 @@
 #pragma once
 
-
 // 
 // Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
 //
@@ -9,25 +8,26 @@
 //
 // Tags:
 //
-// NOT_IMPLEMENTED
 // NO_TESTS
 //
 
+#include "fd-utils.hpp"
 
 class Timer {
     public:
     Timer(); // creates and does not set timer
     Timer(int num_ms); // creates and sets timer
-    ~Timer();
+    ~Timer() { if (fd != -1) close_except(fd); }
 
     Timer(const Timer &) = delete;
     Timer &operator=(const Timer &) = delete;
 
-    Timer(Timer &&timer);
+    Timer(Timer &&timer) : fd(timer.fd) { timer.fd = -1; }
     Timer &operator=(Timer &&timer);
 
-    int get_fd() const;
-    int set(int num_ms);
+    // this is kinda bad, dependency injection would be better here, but at the moment I don't know whether I'll go for a classic poll-style server architecture or something with callback functions
+    int get_fd() const { return fd; }
+    void set(int num_ms);
 
     private:
     int fd;
