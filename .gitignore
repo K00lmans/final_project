@@ -8,6 +8,6 @@ bin
 out
 .cache
 *.swp
-*.pdf
+docs
 cmake-build-debug
 # if you think of anything else to .gitignore please lmk

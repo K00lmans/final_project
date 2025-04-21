@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <system_error>
 #include "fd-poll.hpp"
+#include "fd-utils.hpp"
 
 //
 // Maintainer: Athena Boose
@@ -21,7 +22,7 @@ FdPoll::FdPoll() {
 
 FdPoll::~FdPoll() {
     if (epfd != -1) {
-        close(epfd);
+        close_except(epfd);
     }
 }
 
@@ -32,7 +33,7 @@ FdPoll::FdPoll(FdPoll &&poll) : epfd(poll.epfd) {
 FdPoll &FdPoll::operator=(FdPoll &&poll) {
     if (&poll != this) {
         if (epfd != -1) {
-            close(epfd);
+            close_except(epfd);
         }
         epfd = poll.epfd;
         poll.epfd = -1;
@@ -47,12 +48,12 @@ void FdPoll::ctl(int op, int fd, epoll_event &event) {
     }
 }
 
-int FdPoll::wait(std::span<epoll_event> &events, int timeout) {
+std::span<epoll_event> FdPoll::wait(std::span<epoll_event> events, int timeout) {
     errno = 0;
     int retval = epoll_wait(epfd, events.data(), events.size(), timeout);
     if (retval == -1) {
         throw std::system_error(errno, std::generic_category(), "Could not wait on epoll instance.");
     }
-    return retval;
+    return std::span(events.first(retval));
 }
 

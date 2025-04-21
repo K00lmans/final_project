@@ -5,14 +5,18 @@
 // 
 // Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
 //
-// This file contains "exhaustive" versions of the standard unix read/write functions.
-// These functions will write until one of the following occurs:
+// This file contains versions of standard unix file descriptor manipulation functions that have been made neater to work with in some way.
+//
+// close_except() will attempt to close a file descriptor, throwing an exception if this fails.
+// If interrupted by a signal, it will retry the close operation up to some reasonable maximum number of attempts, at which point it'll throw an exception.
+//
+// exhaustive_* functions will write until one of the following occurs:
 //
 // - The entire buffer they were given has been written
 // - The socket would have blocked with EAGAIN/EWOULDBLOCK
 // - The socket encountered some sort of fatal error (check errno to see what exactly)
 //
-// All functions return a std::pair containing the amount of data sent/read, combined with a status code in the form of a SocketStatus enum.
+// exhaustive_* functions return a std::pair containing the amount of data sent/read, combined with a status code in the form of a SocketStatus enum.
 // The amount of data sent will be 0 if no data was sent (maybe 0 was returned, maybe an error happened, maybe the socket blocked immediately) or it will be some positive number. It's only a ssize_t because that's what readv/writev/read/write return.
 //
 // To find out the state of the socket, you must check the SocketStatus enum.
@@ -23,10 +27,13 @@
 //
 // At present, exhaustive_read and exhaustive_write literally just call exhaustive_readv/writev because I couldn't be bothered to duplicate code.
 
+
+void close_except(int fd);
+
 enum class SocketStatus {
     Finished,
     Blocked,
-    ZeroRead,
+    ZeroReturned,
     Error,
 };
 

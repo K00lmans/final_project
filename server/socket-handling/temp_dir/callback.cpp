@@ -3,6 +3,7 @@
 #include <system_error>
 #include <sys/timerfd.h>
 #include <unistd.h>
+#include "../fd-utils.hpp"
 #include "callback.hpp"
 
 // NOT_IMPLEMENTED
@@ -65,7 +66,7 @@ void Callback::callback_until(int timeout_ms) {
             },
         };
         if (timerfd_settime(timerfd, 0, &spec, NULL) == -1) {
-            close(timerfd);
+            close_except(timerfd);
             throw std::system_error(errno, std::generic_category(), "Could not set timer.");
         }
         epoll_event ev{
@@ -73,7 +74,7 @@ void Callback::callback_until(int timeout_ms) {
             .data{.fd = timerfd},
         };
         if (epoll_ctl(epfd, EPOLL_CTL_ADD, timerfd, &ev) == -1) {
-            close(timerfd);
+            close_except(timerfd);
             throw std::system_error(errno, std::generic_category(), "Could not add timer to epoll.");
         }
     }
@@ -82,7 +83,7 @@ void Callback::callback_until(int timeout_ms) {
 
     if (timeout_ms > 0) {
         epoll_ctl(epfd, EPOLL_CTL_DEL, timerfd, NULL);
-        close(timerfd);
+        close_except(timerfd);
     }
 
 }

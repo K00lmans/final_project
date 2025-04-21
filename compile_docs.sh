@@ -6,6 +6,8 @@ if test -z $1; then
     EXTENSION=pdf
 fi
 
-pandoc design_doc.md -o design_doc.$EXTENSION
-pandoc server/README.md -o server/README.$EXTENSION
+mkdir -p docs/server
+pandoc design_doc.md -o docs/design_doc.$EXTENSION
+pandoc server/README.md -o docs/server/README.$EXTENSION
+pandoc README.md -o docs/README.$EXTENSION
 echo 'Docs compiled successfully.'

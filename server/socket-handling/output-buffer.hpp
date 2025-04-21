@@ -4,7 +4,7 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include "sock-rw.hpp"
+#include "fd-utils.hpp"
 
 // 
 // Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
@@ -14,7 +14,6 @@
 //
 // Tags: 
 //
-// NOT_IMPLEMENTED
 // NO_TESTS
 
 
@@ -29,6 +28,8 @@ class OutputBuffer {
     std::optional<SocketStatus> flush(int fd);
 
     private:
+
+    // replace with something better that takes less memory
     std::deque<std::shared_ptr<std::string>> outbuf;
     std::size_t start_index = 0;
 };

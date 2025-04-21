@@ -1,7 +1,7 @@
 #include <array>
 #include <cstdlib>
 #include <cassert>
-#include "../sock-rw.hpp"
+#include "../fd-utils.hpp"
 #include "sockfuncs.hpp"
 
 void test_exhaustive_readv(void) {
@@ -25,7 +25,7 @@ void test_exhaustive_readv(void) {
 
     result = exhaustive_readv(123, iovs.data(), 4);
     assert(result.first == 0);
-    assert(result.second == SocketStatus::ZeroRead);
+    assert(result.second == SocketStatus::ZeroReturned);
 
     test_type = RwOption::RwRand;
     num_to_read = 14321;
@@ -82,7 +82,7 @@ void test_exhaustive_writev(void) {
 
     result = exhaustive_writev(123, iovs.data(), 4);
     assert(result.first == 0);
-    assert(result.second == SocketStatus::ZeroRead);
+    assert(result.second == SocketStatus::ZeroReturned);
 
     test_type = RwOption::RwRand;
     num_to_write = 14321;
