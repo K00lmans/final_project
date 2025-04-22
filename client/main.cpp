@@ -50,6 +50,7 @@ int main() {
         static_cast<float>(get_window_x_size(screen_size) / background_size[0]),
         static_cast<float>(screen_size.y * window_scaler / background_size[1])
     });
+    Scratch_Pad::clear_data(); // Emptys old data
     auto current_users_pad = std::make_unique<Scratch_Pad>(screen_size, 1);
 
     while (main_game_window.isOpen()) {

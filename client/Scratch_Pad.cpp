@@ -75,8 +75,30 @@ Scratch_Pad::~Scratch_Pad() {
 void Scratch_Pad::update() {
     while (const std::optional event = window.pollEvent()) {
         if (const auto *mouse = event->getIf<sf::Event::MouseButtonPressed>()) {
+            for (auto &box: grid) {
+                if (box.getOutlineColor() == sf::Color::Red) {
+                    box.setOutlineColor(sf::Color(128, 128, 128));
+                }
+            }
             if (mouse->position.x > base_box.getSize().x) {
                 selected_box = static_cast<int>(mouse->position.y / base_box.getSize().y);
+                grid[selected_box + static_cast<int>(lines_on_left_size)].setOutlineColor(sf::Color::Red);
+            } else {
+                selected_box = -1;
+
+            }
+        } else if (const auto *key = event->getIf<sf::Event::TextEntered>()) {
+            if (selected_box != -1) {
+                if (key->unicode < 128) {
+                    char c = key->unicode;
+                    if (c == '\b') {
+                        if (!written_data[selected_box].empty()) {
+                            written_data[selected_box].pop_back();
+                        }
+                    } else {
+                        written_data[selected_box].push_back(c);
+                    }
+                }
             }
         }
     }
@@ -104,4 +126,21 @@ void Scratch_Pad::draw_text() {
     text.setString(combined_written_data);
     text.setPosition({base_box.getSize().x, 0}); // Aligns this text to the right
     window.draw(text);
+}
+
+void Scratch_Pad::clear_object() {
+    for (auto &i: written_data) {
+        i.clear();
+    }
+}
+
+void Scratch_Pad::clear_data() {
+    // This is unnecessarily extendable and I think that's funny
+    for (const auto &pad: std::filesystem::directory_iterator("client/scratch_pads")) {
+        std::ofstream file(pad.path());
+        for (int lines = 0; lines < lines_on_left_size; lines++) {
+            file << std::endl;
+        }
+        file.close();
+    }
 }
