@@ -38,6 +38,7 @@ unsigned int get_window_x_size(const sf::Vector2u size) {
 }
 
 int main() {
+    // Window setup
     const auto screen_size = sf::VideoMode::getDesktopMode().size;
     auto main_game_window = sf::RenderWindow(sf::VideoMode({
                                                  get_window_x_size(screen_size),
@@ -51,10 +52,19 @@ int main() {
         static_cast<float>(screen_size.y * window_scaler / background_size[1])
     });
     Scratch_Pad::clear_data(); // Emptys old data
-    auto current_users_pad = std::make_unique<Scratch_Pad>(screen_size, 1);
+    std::unique_ptr<Scratch_Pad> current_users_pad;
 
+    // Game setup
+    auto Ms_Scarlet = Token(TokenID::MS_SCARLET);
+    auto Col_Mustard = Token(TokenID::COL_MUSTARD);
+    auto Prof_Plum = Token(TokenID::PROF_PLUM);
+    auto Mr_Green = Token(TokenID::MR_GREEN);
+    auto Mrs_Peacock = Token(TokenID::MRS_PEACOCK);
+    auto Mrs_White = Token(TokenID::MRS_WHITE);
+    Board clue_board = getBoardFromFile(); // Can this not just be a constructor? -Kodiak
+
+    // Main game loop
     while (main_game_window.isOpen()) {
-        // Main game loop
         while (const std::optional event = main_game_window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 current_users_pad.reset();
@@ -70,32 +80,11 @@ int main() {
         }
     }
 
-    auto Ms_Scarlet = Token(TokenID::MS_SCARLET);
-    auto Col_Mustard = Token(TokenID::COL_MUSTARD);
-    auto Prof_Plum = Token(TokenID::PROF_PLUM);
-    auto Mr_Green = Token(TokenID::MR_GREEN);
-    auto Mrs_Peacock = Token(TokenID::MRS_PEACOCK);
-    auto Mrs_White = Token(TokenID::MRS_WHITE);
-
-    //Board clue_board = Board();
-    Board clue_board = getBoardFromFile();
-
-
     Player player1 = Player(Mrs_Peacock, Tile(0, 18));
-
-    int *board_visualization = clue_board.getBoard();
-
-    cout << endl << endl; // REMOVE LATER!!
 
     clue_board.deleteToken(Mrs_Peacock, Tile(0, 18));
     player1.setPosition(Tile(6, 15));
     clue_board.placeToken(Mrs_Peacock, Tile(6, 15));
-
-    while (true) {
-        clue_board.displayBoard();
-        player1.movePlayer(clue_board);
-        system("cls");
-    }
 
     return 0;
 }
