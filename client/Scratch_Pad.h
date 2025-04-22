@@ -13,6 +13,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <fstream>
+#include <filesystem>
 
 class Scratch_Pad {
     sf::RenderWindow window;
@@ -46,7 +47,11 @@ public: // I'm actually using private member stuff, wooooooooo
     ~Scratch_Pad();
 
     void update();
-};
 
+    void clear_object();
+
+    // Removes all lingering data in the scratch pad files
+    static void clear_data();
+};
 
 #endif //SCRATCH_PAD_H
