@@ -12,8 +12,10 @@
 //
 
 #include <memory>
+#include <algorithm>
 #include <vector>
 #include <socket-handling/shutdown.hpp>
+#include <socket-handling/fd-poll.hpp>
 #include "player.hpp"
 
 class GameInProgress {
@@ -34,10 +36,26 @@ class GameInProgress {
     // returns true if you need to keep calling back, false if not
     bool callback();
     // returns a fd that has a read event whenever the callback can make progress
-    int get_fd();
+    int get_fd() { return poll.fd(); }
     private:
-    Player &find_io(int fd);
+    // finds a file descriptor in the player list
+    Player &find_io(int fd) {
+        return *std::find_if(players.begin(), players.end(), [fd](const Player &player){ return fd == player.fd; });
+    }
+    void send_err_msg(const std::string &why) {
+        std::shared_ptr<std::string> msg(new std::string("ERR," + why + "\n"));
+        for (Player &player : players) {
+            player.outbuf.add_message(msg);
+        }
+    }
+    void send_ending_msg() {
+        std::shared_ptr<std::string> msg(new std::string("GAME-END\n"));
+        for (Player &player : players) {
+            player.outbuf.add_message(msg);
+        }
+    }
     std::vector<Player> players;
     std::size_t turn_index;
     std::array<std::string, 3> win_cards;
+    FdPoll poll;
 };

@@ -9,6 +9,7 @@
 
 #include <socket-handling/input-buffer.hpp>
 #include <socket-handling/output-buffer.hpp>
+#include "response.hpp"
 
 struct Player {
     Player() = delete;
@@ -24,4 +25,5 @@ struct Player {
     OutputBuffer outbuf;
     int fd;
     std::string character;
+    Response expected_response;
 };
