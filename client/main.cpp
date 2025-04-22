@@ -43,7 +43,7 @@ int main() {
                                                  get_window_x_size(screen_size),
                                                  static_cast<unsigned>(screen_size.y * window_scaler)
                                              }), "Clue", sf::Style::Close);
-    auto background_image = sf::Texture("graphics/clue_board.jpg");
+    auto background_image = sf::Texture("client/graphics/clue_board.jpg");
     background_image.setSmooth(true); // Should be fine since it is the background
     auto background = sf::Sprite(background_image);
     background.setScale({
