@@ -21,7 +21,7 @@ class Scratch_Pad {
     // Would it be better to have it be a vector of sf::Text, yes, but by this point too much had been written with it
     // as a string and I have deluded myself into thinking there is probably some benefit
 
-    sf::Font font = sf::Font("graphics/NotoSans-Black.ttf");
+    sf::Font font = sf::Font("client/graphics/NotoSans-Black.ttf");
     unsigned int text_size = 1;
     // The text on the left side of the scratch pad that indicates items, rooms, and people
     sf::Text left_side_text = sf::Text(font, "Colonel Mustard\nMiss Scarlet\nProfessor Plum\nMr. Green\n"

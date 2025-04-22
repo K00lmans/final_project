@@ -16,7 +16,7 @@ Scratch_Pad::Scratch_Pad(const sf::Vector2u window_size, const int player_num) {
                               "Scratch Pad", sf::Style::Titlebar);
 
     // Loading of the data
-    filepath = "scratch_pads/player_" + std::to_string(player_num) + ".txt";
+    filepath = "client/scratch_pads/player_" + std::to_string(player_num) + ".txt";
     if (std::ifstream file(filepath); !file.is_open()) {
         // If there is an error opening the file, just lose the data
         for (int items = 0; items < 22; items++) {
