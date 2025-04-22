@@ -23,9 +23,17 @@ class GameInProgress {
     GameInProgress() = delete;
     GameInProgress(
         std::vector<Player> &&players, 
-        std::array<std::string, 3> win_cards, 
-        std::shared_ptr<Shutdown<>> shutdown_class
-    );
+        std::array<std::string, 3> &&win_cards, 
+        std::shared_ptr<Shutdown<>> shutdown
+    ) : players(std::move(players)), 
+        win_cards(std::move(win_cards)), 
+        shutdown_singleton(shutdown) {}
+
+    ~GameInProgress() {
+        for (Player &player : players) {
+            shutdown_singleton->shutdown(player.fd, std::move(player.outbuf));
+        }
+    }
 
     GameInProgress(const GameInProgress &) = delete;
     GameInProgress &operator=(const GameInProgress &) = delete;
@@ -54,8 +62,10 @@ class GameInProgress {
             player.outbuf.add_message(msg);
         }
     }
+
     std::vector<Player> players;
-    std::size_t turn_index;
+    std::size_t turn_index = 0;
     std::array<std::string, 3> win_cards;
     FdPoll poll;
+    std::shared_ptr<Shutdown<>> shutdown_singleton;
 };

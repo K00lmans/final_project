@@ -25,5 +25,5 @@ struct Player {
     OutputBuffer outbuf;
     int fd;
     std::string character;
-    Response expected_response;
+    Response expected_response = Response::None;
 };
