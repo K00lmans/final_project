@@ -4,8 +4,8 @@
 #include <system_error>
 #include <fcntl.h>
 
-#include "connection-factory.hpp"
-#include "fd-utils.hpp"
+#include <socket-handling/connection-factory.hpp>
+#include <socket-handling/fd-utils.hpp>
 
 // Various Linux manpages as well as https://beej.us/guide/bgnet/html/ were quite helpful here.
 ConnectionFactory::ConnectionFactory(const std::string &port) : socket_fd(-1) {

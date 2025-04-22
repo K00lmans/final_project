@@ -14,9 +14,9 @@
 #include <unordered_map>
 #include <iostream>
 #include <array>
-#include "output-buffer.hpp"
-#include "timer.hpp"
-#include "fd-poll.hpp"
+#include <socket-handling/output-buffer.hpp>
+#include <socket-handling/timer.hpp>
+#include <socket-handling/fd-poll.hpp>
 
 template <std::size_t EPOLL_BUF_SIZE = 16, std::size_t CLOSE_TIME_MS = 60000>
 class Shutdown {

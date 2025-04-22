@@ -1,5 +1,5 @@
 #include <cassert>
-#include "../input-buffer.hpp"
+#include <socket-handling/input-buffer.hpp>
 #include "sockfuncs.hpp"
 
 static void test_input_buffer(void) {
