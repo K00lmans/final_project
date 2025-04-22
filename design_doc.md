@@ -76,7 +76,7 @@ Character3
 
 ### On player's turn
 
-Server will send a message to client containing solely the text `TURN,YOURS`.
+Server will send a message to client containing solely the text `TURN,YourCharacter`, with the character replaced with your character's name.
 
 Client must then send a message containing a comma-separated list of the cards they want to ask for, followed by a message contianing position information.
 The position information message will then be sent to all other clients, prefixed with the client's character name and a single comma.
