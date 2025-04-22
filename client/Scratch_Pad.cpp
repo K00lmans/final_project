@@ -10,7 +10,6 @@
 
 double lines_on_left_size = 22;
 
-// This needs lots of testing
 Scratch_Pad::Scratch_Pad(const sf::Vector2u window_size, const int player_num) {
     // Creation of the window
     window = sf::RenderWindow(sf::VideoMode({window_size.x / 4, static_cast<unsigned>(window_size.y * .8)}),
@@ -20,7 +19,7 @@ Scratch_Pad::Scratch_Pad(const sf::Vector2u window_size, const int player_num) {
     filepath = "scratch_pads/player_" + std::to_string(player_num) + ".txt";
     if (std::ifstream file(filepath); !file.is_open()) {
         // If there is an error opening the file, just lose the data
-        for (int items = 0; items < 21; items++) {
+        for (int items = 0; items < 22; items++) {
             written_data.emplace_back("");
         }
     } else {
@@ -75,10 +74,15 @@ Scratch_Pad::~Scratch_Pad() {
 // Must be put in the update loop
 void Scratch_Pad::update() {
     while (const std::optional event = window.pollEvent()) {
+        if (const auto *mouse = event->getIf<sf::Event::MouseButtonPressed>()) {
+            if (mouse->position.x > base_box.getSize().x) {
+                selected_box = static_cast<int>(mouse->position.y / base_box.getSize().y);
+            }
+        }
     }
     window.clear(sf::Color(225, 198, 153)); // A pleasant shade of beige
-    window.draw(left_side_text);
     draw_grid();
+    draw_text();
     window.display();
 }
 
@@ -89,4 +93,15 @@ void Scratch_Pad::draw_grid() {
 }
 
 void Scratch_Pad::draw_text() {
+    window.draw(left_side_text); // Moved here for clarity with the function name
+
+    sf::Text text(font, "", text_size);
+    std::string combined_written_data;
+    for (const auto &i: written_data) {
+        combined_written_data += i;
+        combined_written_data += '\n';
+    }
+    text.setString(combined_written_data);
+    text.setPosition({base_box.getSize().x, 0}); // Aligns this text to the right
+    window.draw(text);
 }

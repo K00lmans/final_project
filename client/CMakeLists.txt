@@ -11,8 +11,6 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(client-bin
         main.cpp
-        Location.cpp
-        Location.h
         Scratch_Pad.cpp
         Scratch_Pad.h
  "GameCode/Board.cpp" "GameCode/BoardSetup.cpp" "GameCode/Clue.cpp" "GameCode/Player.cpp" "GameCode/Room.cpp" "GameCode/Tile.cpp" "GameCode/Token.cpp" "GameCode/TokenID.cpp" "GameCode/BoardData.cpp"

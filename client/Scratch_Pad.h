@@ -18,6 +18,8 @@ class Scratch_Pad {
     sf::RenderWindow window;
     std::string filepath; // The location of the specific file that this object saves and loads to
     std::vector<std::string> written_data; // The information the user has written in the scratch pad
+    // Would it be better to have it be a vector of sf::Text, yes, but by this point too much had been written with it
+    // as a string and I have deluded myself into thinking there is probably some benefit
 
     sf::Font font = sf::Font("graphics/NotoSans-Black.ttf");
     unsigned int text_size = 1;
@@ -27,6 +29,8 @@ class Scratch_Pad {
                                              "Revolver\nBottle of Poison\nStudy\nHall\nLounge\nDining Room\nKitchen\n"
                                              "Ballroom\nConservatory\nBilliard Room\nLibrary", text_size);
 
+    // The size of one text square. Its width is half the size of the screen and the height based on how many lines of
+    // text. Used as an alignment indicator for a whole bunch of things as well as setting up the grid
     sf::RectangleShape base_box;
     std::vector<sf::RectangleShape> grid;
 
