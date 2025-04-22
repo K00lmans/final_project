@@ -25,6 +25,7 @@ class FdPoll {
     FdPoll &operator=(FdPoll &&poll);
 
     void ctl(int op, int fd, epoll_event &event);
+    int fd() const { return epfd; }
 
     // Will never return -1 (instead throws exception)
     std::span<epoll_event> wait(std::span<epoll_event> events, int timeout);

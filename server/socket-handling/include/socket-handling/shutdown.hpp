@@ -14,9 +14,9 @@
 #include <unordered_map>
 #include <iostream>
 #include <array>
-#include "output-buffer.hpp"
-#include "timer.hpp"
-#include "fd-poll.hpp"
+#include <socket-handling/output-buffer.hpp>
+#include <socket-handling/timer.hpp>
+#include <socket-handling/fd-poll.hpp>
 
 template <std::size_t EPOLL_BUF_SIZE = 16, std::size_t CLOSE_TIME_MS = 60000>
 class Shutdown {
@@ -56,7 +56,7 @@ template <std::size_t EPOLL_BUF_SIZE, std::size_t CLOSE_TIME_MS>
 void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&outbuf) {
     try {
         ClosingSocket sock(fd, std::move(outbuf));
-        SocketStatus status = sock.outbuf.flush();
+        SocketStatus status = sock.outbuf.flush(fd);
         epoll_event ev{ .events = EPOLLOUT | EPOLLRDHUP, .data = {.fd = fd} };
         switch (status) {
         case SocketStatus::Finished:
@@ -65,7 +65,7 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&ou
             sock.timer.set(CLOSE_TIME_MS);
             poll.ctl(EPOLL_CTL_ADD, fd, ev);
             ev.events = EPOLLIN;
-            poll.ctl(EPOLL_CTL_ADD, sock.timer.fd(), ev); // making the timerfd "point" to the fd of the socket we want to close; epoll will tell us how to find the proper stuff in our hashmap
+            poll.ctl(EPOLL_CTL_ADD, sock.timer.get_fd(), ev); // making the timerfd "point" to the fd of the socket we want to close; epoll will tell us how to find the proper stuff in our hashmap
             map.insert(std::pair(fd, std::move(sock)));
             break;
         case SocketStatus::ZeroReturned:
