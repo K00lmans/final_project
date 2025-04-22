@@ -42,8 +42,8 @@ class Shutdown {
         ClosingSocket &operator=(ClosingSocket &&) = default;
 
         Timer timer;
-        OutputBuffer outbuf;
         int sock_fd;
+        OutputBuffer outbuf;
     };
 
     std::unordered_map<int, ClosingSocket> map;

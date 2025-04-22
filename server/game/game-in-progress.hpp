@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <vector>
 #include <socket-handling/shutdown.hpp>
+#include <string>
 #include <socket-handling/fd-poll.hpp>
 #include "player.hpp"
 
