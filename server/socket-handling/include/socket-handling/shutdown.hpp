@@ -56,7 +56,7 @@ template <std::size_t EPOLL_BUF_SIZE, std::size_t CLOSE_TIME_MS>
 void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&outbuf) {
     try {
         ClosingSocket sock(fd, std::move(outbuf));
-        SocketStatus status = sock.outbuf.flush(fd).value_or(SocketStatus::Finished);
+        SocketStatus status = sock.outbuf.flush(fd);
         epoll_event ev{ .events = EPOLLOUT | EPOLLRDHUP, .data = {.fd = fd} };
         switch (status) {
         case SocketStatus::Finished:

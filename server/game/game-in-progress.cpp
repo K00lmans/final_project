@@ -16,7 +16,9 @@ bool GameInProgress::callback() {
     }
 
     if (ev.events & EPOLLIN) {}
-    if (ev.events & EPOLLOUT) {}
+    if (ev.events & EPOLLOUT) {
+        SocketStatus result(player_with_event.outbuf.flush(player_with_event.fd));
+    }
 
     return true;
 }

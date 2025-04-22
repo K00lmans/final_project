@@ -25,7 +25,7 @@ class OutputBuffer {
     // This does not ever send a message, to do that you must call flush().
     void add_message(std::shared_ptr<std::string> msg) { outbuf.push_back(msg); }
 
-    std::optional<SocketStatus> flush(int fd);
+    SocketStatus flush(int fd);
 
     private:
 

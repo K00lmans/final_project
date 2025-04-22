@@ -28,9 +28,9 @@ static std::pair<std::size_t, std::size_t> get_iovecs_to_remove(const std::vecto
 }
 
 
-std::optional<SocketStatus> OutputBuffer::flush(int fd) {
+SocketStatus OutputBuffer::flush(int fd) {
     if (outbuf.empty()) {
-        return std::optional<SocketStatus>(std::nullopt);
+        return SocketStatus::Finished;
     }
     int iovcnt = (outbuf.size() > IOV_MAX) ? IOV_MAX : outbuf.size();
     std::vector<iovec> iovecs;
