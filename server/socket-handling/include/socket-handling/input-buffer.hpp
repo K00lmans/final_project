@@ -39,13 +39,13 @@ class InputBuffer {
     }
 
 
-    std::optional<SocketStatus> buf_read(int fd) {
+    SocketStatus buf_read(int fd) {
         // this kinda just bruteforces all the different states a ringbuffer can be in
         // it's not elegant but I had a hard time thinking about this and covering all edge cases
 
         // check for full buffer
         if (full()) {
-            return std::optional<SocketStatus>(std::nullopt);
+            return SocketStatus::Finished;
         }
 
         std::array<iovec, 2> iov{};
@@ -82,10 +82,10 @@ class InputBuffer {
         }
         auto retval = exhaustive_readv(fd, iov.data(), iovcnt);
         if (retval.first == -1 || retval.first == 0) {
-            return std::optional(retval.second);
+            return retval.second;
         }
         end = mod(end + retval.first);
-        return std::optional(retval.second);
+        return retval.second;
     }
     void pop_front(std::size_t amount) {
         // should assert that amount <= size()!!!

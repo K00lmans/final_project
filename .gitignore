@@ -10,4 +10,5 @@ out
 *.swp
 docs
 cmake-build-debug
+#**/scratch_pads/
 # if you think of anything else to .gitignore please lmk
