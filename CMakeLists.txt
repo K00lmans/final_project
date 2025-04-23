@@ -3,6 +3,7 @@ project(i-havent-a-clue CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug) # change to Release when building a release!!
+set(CMAKE_CXX_FLAGS -fconcepts-diagnostics-depth=10)
 include(CTest)
 
 if (NOT DEFINED BUILD_CLIENT)

@@ -3,14 +3,18 @@
 #include <netdb.h>
 #include <system_error>
 #include <fcntl.h>
+#include <cstring>
 
 #include <socket-handling/connection-factory.hpp>
 #include <socket-handling/fd-utils.hpp>
 
+
+#include <iostream> // debugging
+
 // Various Linux manpages as well as https://beej.us/guide/bgnet/html/ were quite helpful here.
 ConnectionFactory::ConnectionFactory(const std::string &port) : socket_fd(-1) {
     addrinfo hints{};
-    hints.ai_protocol = SOCK_STREAM;
+    hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
     hints.ai_family = AF_UNSPEC;
     addrinfo *result = NULL;

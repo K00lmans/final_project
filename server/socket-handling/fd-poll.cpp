@@ -15,6 +15,7 @@
 
 FdPoll::FdPoll() {
     errno = 0;
+    epfd = epoll_create1(0);
     if (epfd == -1) {
         throw std::system_error(errno, std::generic_category(), "Could not create epoll instance.");
     }

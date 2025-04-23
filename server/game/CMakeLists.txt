@@ -4,7 +4,6 @@ add_library(game-serverside
     game-in-progress.hpp
     game-in-progress.cpp
     player.hpp
-    game.hpp
 )
 
 target_compile_features(game-serverside PUBLIC cxx_std_23)

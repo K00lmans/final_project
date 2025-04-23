@@ -19,7 +19,7 @@
 #include <socket-handling/fd-poll.hpp>
 #include "player.hpp"
 #include "game-data.hpp"
-#include "game-startup.hpp"
+
 
 class GameInProgress {
     public:
@@ -33,7 +33,6 @@ class GameInProgress {
 
     GameInProgress(GameInProgress &&) = default;
     GameInProgress &operator=(GameInProgress &&) = default;
-    GameInProgress(GameStartup &&start) : game(std::move(start.game)){}
 
     // returns true if you need to keep calling back, false if not
     bool callback();

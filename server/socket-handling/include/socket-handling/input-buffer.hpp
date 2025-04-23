@@ -4,6 +4,8 @@
 #include <climits>
 #include <socket-handling/fd-utils.hpp>
 
+#include <iostream> // debugging
+
 // 
 // Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
 // 
@@ -45,6 +47,7 @@ class InputBuffer {
 
         // check for full buffer
         if (full()) {
+            std::cout << "full as hell" << std::endl;
             return SocketStatus::Finished;
         }
 

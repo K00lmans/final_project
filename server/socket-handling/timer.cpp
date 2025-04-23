@@ -15,6 +15,11 @@ constexpr static inline itimerspec ms_to_itimerspec(int num_ms) {
         }
     };
 }
+Timer::Timer() : fd(timerfd_create(CLOCK_MONOTONIC, 0)) {
+    if (fd == -1) {
+        throw std::system_error(errno, std::generic_category(), "Could not create timer.");
+    }
+}
 
 Timer::Timer(int num_ms) : fd(timerfd_create(CLOCK_MONOTONIC, 0)) {
     if (fd == -1) {
