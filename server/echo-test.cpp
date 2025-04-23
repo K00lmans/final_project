@@ -1,3 +1,6 @@
+#include <sys/resource.h>
+#include <cassert>
+#include <sys/time.h>
 #include <unordered_map>
 #include <socket-handling/fd-poll.hpp>
 #include <socket-handling/connection-factory.hpp>
@@ -24,6 +27,10 @@ int main(void) {
 
     ev.data.fd = STDIN_FILENO;
     poll.ctl(EPOLL_CTL_ADD, STDIN_FILENO, ev);
+    rlimit lim;
+    assert(getrlimit(RLIMIT_NOFILE, &lim) != -1);
+    lim.rlim_cur = lim.rlim_max >> 2; // 1/4 of the max seems nice
+    assert(setrlimit(RLIMIT_NOFILE, &lim) != -1);
 
     while (true) {
         
