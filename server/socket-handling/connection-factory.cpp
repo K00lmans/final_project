@@ -66,7 +66,19 @@ ConnectionFactory::~ConnectionFactory() {
 std::optional<int> ConnectionFactory::get_new_connection() {
     int new_fd = accept(socket_fd, NULL, NULL);
     if (new_fd == -1) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        if (errno == EAGAIN || 
+            errno == EWOULDBLOCK
+        ) {
+            return std::optional<int>(std::nullopt);
+        }
+        if (
+            errno == ECONNABORTED ||
+            errno == EINTR ||
+            errno == EMFILE ||
+            errno == ENFILE ||
+            errno == ENOBUFS
+        ) {
+            std::cerr << "Error accepting connection: " << strerror(errno) << std::endl;
             return std::optional<int>(std::nullopt);
         }
         throw std::system_error(errno, std::generic_category(), "Call to accept() failed fatally.");
