@@ -28,7 +28,7 @@ class FdPoll {
     int fd() const { return epfd; }
 
     // Will never return -1 (instead throws exception)
-    std::span<epoll_event> wait(std::span<epoll_event> events, int timeout);
+    std::span<epoll_event> wait(const std::span<epoll_event> &events, int timeout);
 
     private:
     int epfd;

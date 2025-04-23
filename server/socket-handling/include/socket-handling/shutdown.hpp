@@ -24,7 +24,7 @@ class Shutdown {
     public:
     // Makes a best-effort attempt to shutdown the socket and ensure any messages sent to it are fully sent.
     // Assuming no errors occur, any messages already sent to the socket will be fully sent before the socket is actually closed.
-    void shutdown(int fd, OutputBuffer &&outbuf);
+    void shutdown_sock(int fd, OutputBuffer &&outbuf);
     void callback();
     int get_fd() const { return poll.fd(); }
 
@@ -45,23 +45,26 @@ class Shutdown {
         OutputBuffer outbuf;
     };
 
-    std::unordered_map<int, ClosingSocket> map;
+    std::unordered_map<int, ClosingSocket> map{};
     FdPoll poll;
     std::array<epoll_event, EPOLL_BUF_SIZE> event_list;
 };
 
 
 template <std::size_t EPOLL_BUF_SIZE, std::size_t CLOSE_TIME_MS>
-void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&outbuf) {
+void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown_sock(int fd, OutputBuffer &&outbuf) {
     try {
         ClosingSocket sock(fd, std::move(outbuf));
         SocketStatus status = sock.outbuf.flush(fd);
         epoll_event ev{ .events = EPOLLOUT | EPOLLRDHUP | EPOLLET, .data = {.fd = fd} };
         switch (status) {
         case SocketStatus::Finished:
-            ev.events = EPOLLRDHUP | EPOLLET;
-            ::shutdown(fd, SHUT_WR);
         case SocketStatus::Blocked:
+            if (sock.outbuf.empty()) {
+                ev.events = EPOLLRDHUP | EPOLLET;
+                std::cout << "Called shutdown on fd." << std::endl;
+                shutdown(fd, SHUT_WR);
+            }
             sock.timer.set(CLOSE_TIME_MS);
             poll.ctl(EPOLL_CTL_ADD, fd, ev);
             ev.events = EPOLLIN;
@@ -107,15 +110,18 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::callback() {
             continue;
         }
 
-        SocketStatus status = map.at(ev.data.fd).outbuf.flush(ev.data.fd);
+        OutputBuffer &outbuf = map.at(ev.data.fd).outbuf;
+        SocketStatus status = outbuf.flush(ev.data.fd);
         switch (status) {
         case SocketStatus::Finished:
-            temp_ev.events = EPOLLRDHUP;
-            temp_ev.data.fd = ev.data.fd;
-            poll.ctl(EPOLL_CTL_MOD, ev.data.fd, temp_ev);
-            ::shutdown(ev.data.fd, SHUT_WR);
-            break;
         case SocketStatus::Blocked:
+            if (outbuf.empty()) {
+                temp_ev.events = EPOLLRDHUP | EPOLLET;
+                temp_ev.data.fd = ev.data.fd;
+                poll.ctl(EPOLL_CTL_MOD, ev.data.fd, temp_ev);
+                std::cout << "Called shutdown() on fd" << std::endl;
+                shutdown(ev.data.fd, SHUT_WR);
+            }
             break;
         case SocketStatus::ZeroReturned:
         case SocketStatus::Error:

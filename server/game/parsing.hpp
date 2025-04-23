@@ -11,12 +11,16 @@ bool get_player_name(const InputBuffer<BUF_SIZE> &msg_string, std::size_t msg_le
     if (msg_string[msg_len - 1] != '\n') {
         return false;
     }
+    if (msg_string[msg_len - 2] != '\r') {
+        return false;
+    }
+
     for (std::size_t i = 0; i < PLAYER_NAME.size(); ++i) {
         if (msg_string[i] != PLAYER_NAME[i]) {
             return false;
         }
     }
-    for (std::size_t i = PLAYER_NAME.size(); i < msg_len - 1; ++i) {
+    for (std::size_t i = PLAYER_NAME.size(); i < msg_len - 2; ++i) {
         out_string.push_back(msg_string[i]);
     }
     return true;

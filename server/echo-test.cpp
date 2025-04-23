@@ -7,7 +7,7 @@
 static void kill_sock(int sock, FdPoll &poll, Shutdown<> &shut, std::unordered_map<int, std::pair<InputBuffer<63>, OutputBuffer>> &fdmap) {
     epoll_event ev;
     poll.ctl(EPOLL_CTL_DEL, sock, ev);
-    shut.shutdown(sock, std::move(fdmap.at(sock).second));
+    shut.shutdown_sock(sock, std::move(fdmap.at(sock).second));
     fdmap.erase(sock);
     std::cout << "fuck you" << std::endl;
 }
@@ -18,12 +18,13 @@ int main(void) {
     poll.ctl(EPOLL_CTL_ADD, connfact.get_fd(), ev);
     std::unordered_map<int, std::pair<InputBuffer<63>, OutputBuffer>> fdmap;
     std::array<epoll_event, 1> ep_array;
+    std::span span(ep_array);
     Shutdown<> shut;
     ev.data.fd = shut.get_fd();
     poll.ctl(EPOLL_CTL_ADD, shut.get_fd(), ev);
 
     while (true) {
-        auto update = poll.wait(std::span(ep_array), -1);
+        auto update = poll.wait(span, -1);
         if (update[0].data.fd == connfact.get_fd()) {
             int new_fd = connfact.get_new_connection().value();
             fdmap.try_emplace(
@@ -43,7 +44,7 @@ int main(void) {
             update[0].events & EPOLLERR ||
             update[0].events & EPOLLHUP
         ) {
-            kill_sock(update[0].events, poll, shut, fdmap);
+            kill_sock(update[0].data.fd, poll, shut, fdmap);
             continue;
         }
         if (update[0].events & EPOLLIN) {
@@ -65,10 +66,6 @@ int main(void) {
                 else if (num_parsed.has_value()) {
                     std::string out_str;
                     for (std::size_t i = 0; i < num_parsed.value(); ++i) {
-                        if (inbuf[i] == 0x03) {
-                            kill_sock(update[0].data.fd, poll, shut, fdmap);
-                            goto endloop;
-                        }
                         out_str += inbuf[i];
                     }
                     inbuf.pop_front(num_parsed.value());

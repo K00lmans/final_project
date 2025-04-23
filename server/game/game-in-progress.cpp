@@ -3,7 +3,8 @@
 #include "game-in-progress.hpp"
 
 static void delete_bad_player(std::vector<Player> &players, Player &bad_player) {
-    std::swap(bad_player, players[players.size() - 1]);
+    Player &good_player = players[players.size() - 1];
+    std::swap(bad_player, good_player);
     close_except(players[players.size() - 1].fd);
     players.pop_back();
 }

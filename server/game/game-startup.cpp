@@ -40,7 +40,7 @@ GameStartup::StartState GameStartup::process_current_player_event(Player &player
             }
             // sending cards message
             player.outbuf.add_message(std::shared_ptr<std::string>(new std::string(
-            "PLAYER-CARDS," + cards_list[current_card] + "," + cards_list[current_card + 1] + "," + cards_list[current_card + 2] + "\n"
+            "PLAYER-CARDS," + cards_list[current_card] + "," + cards_list[current_card + 1] + "," + cards_list[current_card + 2] + "\r\n"
             )));
             current_card += 3;
 

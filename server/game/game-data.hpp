@@ -21,7 +21,7 @@ struct GameData {
     GameData(std::shared_ptr<Shutdown<>> shutdown) : shutdown_singleton(shutdown) {}
     ~GameData() {
         for (Player &player : players) {
-            shutdown_singleton->shutdown(player.fd, std::move(player.outbuf));
+            shutdown_singleton->shutdown_sock(player.fd, std::move(player.outbuf));
         }
     }
 
