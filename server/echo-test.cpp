@@ -9,7 +9,6 @@ static void kill_sock(int sock, FdPoll &poll, Shutdown<> &shut, std::unordered_m
     poll.ctl(EPOLL_CTL_DEL, sock, ev);
     shut.shutdown_sock(sock, std::move(fdmap.at(sock).second));
     fdmap.erase(sock);
-    std::cout << "fuck you" << std::endl;
 }
 int main(void) {
     FdPoll poll;
@@ -23,8 +22,15 @@ int main(void) {
     ev.data.fd = shut.get_fd();
     poll.ctl(EPOLL_CTL_ADD, shut.get_fd(), ev);
 
+    ev.data.fd = STDIN_FILENO;
+    poll.ctl(EPOLL_CTL_ADD, STDIN_FILENO, ev);
+
     while (true) {
+        
         auto update = poll.wait(span, -1);
+        if (update[0].data.fd == STDIN_FILENO) {
+            return EXIT_SUCCESS;
+        }
         if (update[0].data.fd == connfact.get_fd()) {
             int new_fd = connfact.get_new_connection().value();
             fdmap.try_emplace(

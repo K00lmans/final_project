@@ -49,7 +49,6 @@ class InputBuffer {
         if (full()) {
             return SocketStatus::Finished;
         }
-        std::cout << start << "," << end << std::endl;
 
         std::array<iovec, 2> iov{};
         int iovcnt = 0;
@@ -100,7 +99,6 @@ class InputBuffer {
     std::optional<std::size_t> get_msg_end() const {
         bool in_end_seq = false;
         for (std::size_t i = 0; i < size(); ++i) {
-            std::cout << start << "," << end << "," << i << std::endl;
             if (operator[](i) == '\r') {
                 in_end_seq = true;
                 continue;
