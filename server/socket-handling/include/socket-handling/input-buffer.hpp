@@ -47,9 +47,9 @@ class InputBuffer {
 
         // check for full buffer
         if (full()) {
-            std::cout << "full as hell" << std::endl;
             return SocketStatus::Finished;
         }
+        std::cout << start << "," << end << std::endl;
 
         std::array<iovec, 2> iov{};
         int iovcnt = 0;

@@ -14,11 +14,12 @@
 #include <unordered_map>
 #include <iostream>
 #include <array>
+#include <sys/socket.h>
 #include <socket-handling/output-buffer.hpp>
 #include <socket-handling/timer.hpp>
 #include <socket-handling/fd-poll.hpp>
 
-template <std::size_t EPOLL_BUF_SIZE = 16, std::size_t CLOSE_TIME_MS = 60000>
+template <std::size_t EPOLL_BUF_SIZE = 16, std::size_t CLOSE_TIME_MS = 10000>
 class Shutdown {
     public:
     // Makes a best-effort attempt to shutdown the socket and ensure any messages sent to it are fully sent.
@@ -55,10 +56,11 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&ou
     try {
         ClosingSocket sock(fd, std::move(outbuf));
         SocketStatus status = sock.outbuf.flush(fd);
-        epoll_event ev{ .events = EPOLLOUT | EPOLLRDHUP, .data = {.fd = fd} };
+        epoll_event ev{ .events = EPOLLOUT | EPOLLRDHUP | EPOLLET, .data = {.fd = fd} };
         switch (status) {
         case SocketStatus::Finished:
-            ev.events = EPOLLRDHUP;
+            ev.events = EPOLLRDHUP | EPOLLET;
+            ::shutdown(fd, SHUT_WR);
         case SocketStatus::Blocked:
             sock.timer.set(CLOSE_TIME_MS);
             poll.ctl(EPOLL_CTL_ADD, fd, ev);
@@ -109,7 +111,9 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::callback() {
         switch (status) {
         case SocketStatus::Finished:
             temp_ev.events = EPOLLRDHUP;
+            temp_ev.data.fd = ev.data.fd;
             poll.ctl(EPOLL_CTL_MOD, ev.data.fd, temp_ev);
+            ::shutdown(ev.data.fd, SHUT_WR);
             break;
         case SocketStatus::Blocked:
             break;

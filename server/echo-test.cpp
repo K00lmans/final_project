@@ -9,6 +9,7 @@ static void kill_sock(int sock, FdPoll &poll, Shutdown<> &shut, std::unordered_m
     poll.ctl(EPOLL_CTL_DEL, sock, ev);
     shut.shutdown(sock, std::move(fdmap.at(sock).second));
     fdmap.erase(sock);
+    std::cout << "fuck you" << std::endl;
 }
 int main(void) {
     FdPoll poll;
