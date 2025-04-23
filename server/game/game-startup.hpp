@@ -33,12 +33,15 @@ class GameStartup {
         game.add_player(fd);
         if (!current_index.has_value()) {
             current_index = std::optional(game.players.size() - 1);
+            game.add_player
         }
         return true;
+        // must send message on addition
     }
     std::size_t size() const { return game.players.size(); }
     private:
     StartState process_current_player_event(Player &player, uint32_t event);
+    StartState process_other_player_event(Player &player);
     GameData game;
     std::string picked_cards_msg{"PLAYERS-TAKEN\n"};
     std::array<std::string, 22> cards_list{cards::all_cards};
