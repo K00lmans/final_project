@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.25)
 project(i-havent-a-clue CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

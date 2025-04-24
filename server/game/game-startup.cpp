@@ -1,4 +1,5 @@
 #include <memory>
+#include <algorithm>
 #include <game/game-startup.hpp>
 #include "parsing.hpp"
 #include "cards.hpp"
