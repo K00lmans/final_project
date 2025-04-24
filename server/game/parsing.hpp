@@ -4,7 +4,9 @@
 
 template <std::size_t BUF_SIZE>
 bool get_player_name(const InputBuffer<BUF_SIZE> &msg_string, std::size_t msg_len, std::string &out_string) {
-    const std::string PLAYER_NAME("PLAYER-NAME,");
+    const std::string PLAYER_NAME("PLAYER-SELECT,");
+    out_string.pop_back();
+    out_string.pop_back();
     if (PLAYER_NAME.size() >= msg_len || msg_string.size() < msg_len) {
         return false;
     }
@@ -20,7 +22,7 @@ bool get_player_name(const InputBuffer<BUF_SIZE> &msg_string, std::size_t msg_le
             return false;
         }
     }
-    for (std::size_t i = PLAYER_NAME.size(); i < msg_len - 2; ++i) {
+    for (std::size_t i = PLAYER_NAME.size(); i < msg_len; ++i) {
         out_string.push_back(msg_string[i]);
     }
     return true;
