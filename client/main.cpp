@@ -22,16 +22,14 @@
 
 int main() {
     // Window setup
-    const auto screen_size = sf::VideoMode::getDesktopMode().size;
-    auto main_game_window = sf::RenderWindow(sf::VideoMode({
-                                                 get_window_x_size(screen_size),
-                                                 static_cast<unsigned>(screen_size.y * window_scaler)
-                                             }), "Clue", sf::Style::Close);
+    screen_size = sf::VideoMode::getDesktopMode().size;
+    auto main_game_window = sf::RenderWindow(sf::VideoMode({get_window_x_size(),
+        static_cast<unsigned>(screen_size.y * window_scaler)}), "Clue", sf::Style::Close);
     auto background_image = sf::Texture("client/graphics/clue_board.jpg");
     background_image.setSmooth(true); // Should be fine since it is the background
     auto background = sf::Sprite(background_image);
     background.setScale({
-        static_cast<float>(get_window_x_size(screen_size) / background_size[0]),
+        static_cast<float>(get_window_x_size() / background_size[0]),
         static_cast<float>(screen_size.y * window_scaler / background_size[1])
     });
     Scratch_Pad::clear_data(); // Emptys old data
@@ -45,7 +43,7 @@ int main() {
     auto Mrs_Peacock = Token(TokenID::MRS_PEACOCK);
     auto Mrs_White = Token(TokenID::MRS_WHITE);
     Board clue_board = getBoardFromFile(); // Can this not just be a constructor? -Kodiak
-    Player *players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+    Player *players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; // I have an irrational love of c arrays
 
     // Main game loop
     while (main_game_window.isOpen()) {
@@ -70,5 +68,8 @@ int main() {
     player1.setPosition(Tile(6, 15));
     clue_board.placeToken(Mrs_Peacock, Tile(6, 15));
 
+    for (auto &player : players) {
+        delete player;
+    }
     return 0;
 }

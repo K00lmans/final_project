@@ -36,9 +36,13 @@ typedef enum characters {
 // The scaler for the y size of the window based on the users screen. Can not be 1 or greater
 inline double window_scaler = .75;
 inline double background_size[2] = {1162.0, 1159.0}; // Size in pixels of the background image
+inline sf::Vector2u screen_size;
+inline sf::Font font("client/graphics/NotoSans-Black.ttf");
 
-unsigned int get_window_x_size(sf::Vector2u size);
+unsigned int get_window_x_size();
 
 void pick_characters(Player *player_list[6]);
+
+sf::RectangleShape create_standard_box();
 
 #endif //MAIN_H
