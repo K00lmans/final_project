@@ -1,6 +1,59 @@
 #include <memory>
-#include "game-startup.hpp"
+#include <game/game-startup.hpp>
 #include "parsing.hpp"
+#include "cards.hpp"
+
+GameStartup::GameStartup(std::shared_ptr<Shutdown<>> shutdown, std::mt19937 &randomizer) : game(shutdown), cards_list(cards::all_cards) {
+    std::uniform_int_distribution<std::mt19937::result_type> suspects_dist(0, 5);
+    std::uniform_int_distribution<std::mt19937::result_type> weapons_dist(0, 6);
+    std::uniform_int_distribution<std::mt19937::result_type> rooms_dist(0, 8);
+
+    game.win_cards[0] = cards::suspects[suspects_dist(randomizer)];
+    game.win_cards[1] = cards::weapons[weapons_dist(randomizer)];
+    game.win_cards[2] = cards::rooms[rooms_dist(randomizer)];
+    
+    std::shuffle(cards_list.begin(), cards_list.end(), randomizer);
+}
+
+GameStartup::StartState GameStartup::try_ready_game() {
+    if (size() == 0) {
+        return NotReady;
+    }
+    std::array<epoll_event, 1> ep_ev;
+    std::span<epoll_event> result = game.poll.wait(std::span(ep_ev), 0);
+    if (
+        (result[0].events & EPOLLRDHUP) ||
+        (result[0].events & EPOLLERR) ||
+        (result[0].events & EPOLLHUP)
+    ) {
+        return Error;
+    }
+
+    if (result[0].events & EPOLLOUT) {
+        for (Player &pl : game.players) {
+            if (pl.fd == result[0].data.fd) {
+                return process_out_event(pl);
+            }
+        }
+    }
+    else if (result[0].events & EPOLLIN) {
+        return process_in_event(game.players[current_index.value()]);
+    }
+
+    return Error;
+}
+
+std::optional<GameStartup::StartState> GameStartup::add_user(int fd) {
+    if (game.players.size() >= 6) {
+        return std::optional<StartState>(std::nullopt);
+    }
+    game.add_player(fd);
+    if (!current_index.has_value()) {
+        current_index = std::optional(game.players.size() - 1);
+        return std::optional(initialize_new_player(game.players[current_index.value()]));
+    }
+    return std::optional(NotReady);
+}
 
 // the below code is really terrible but the logic for this just inherently sucks, so not much i can do about it lol
 
@@ -83,55 +136,3 @@ GameStartup::StartState GameStartup::initialize_new_player(Player &player) {
     return Error;
 }
 
-std::optional<GameStartup::StartState> GameStartup::add_user(int fd) {
-    if (game.players.size() >= 6) {
-        return std::optional<StartState>(std::nullopt);
-    }
-    game.add_player(fd);
-    if (!current_index.has_value()) {
-        current_index = std::optional(game.players.size() - 1);
-        return std::optional(initialize_new_player(game.players[current_index.value()]));
-    }
-    return std::optional(NotReady);
-}
-
-GameStartup::GameStartup(std::shared_ptr<Shutdown<>> shutdown, std::mt19937 &randomizer) : game(shutdown) {
-    std::uniform_int_distribution<std::mt19937::result_type> suspects_dist(0, 5);
-    std::uniform_int_distribution<std::mt19937::result_type> weapons_dist(0, 6);
-    std::uniform_int_distribution<std::mt19937::result_type> rooms_dist(0, 8);
-
-    game.win_cards[0] = cards::suspects[suspects_dist(randomizer)];
-    game.win_cards[1] = cards::weapons[weapons_dist(randomizer)];
-    game.win_cards[2] = cards::rooms[rooms_dist(randomizer)];
-    
-    std::shuffle(cards_list.begin(), cards_list.end(), randomizer);
-}
-
-GameStartup::StartState GameStartup::try_ready_game() {
-    // must deal with shit thingy 
-    if (size() == 0) {
-        return NotReady;
-    }
-    std::array<epoll_event, 1> ep_ev;
-    std::span<epoll_event> result = game.poll.wait(std::span(ep_ev), 0);
-    if (
-        (result[0].events & EPOLLRDHUP) ||
-        (result[0].events & EPOLLERR) ||
-        (result[0].events & EPOLLHUP)
-    ) {
-        return Error;
-    }
-
-    if (result[0].events & EPOLLOUT) {
-        for (Player &pl : game.players) {
-            if (pl.fd == result[0].data.fd) {
-                return process_out_event(pl);
-            }
-        }
-    }
-    else if (result[0].events & EPOLLIN) {
-        return process_in_event(game.players[current_index.value()]);
-    }
-
-    return Error;
-}

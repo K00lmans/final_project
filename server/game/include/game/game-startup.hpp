@@ -3,12 +3,10 @@
 #include <random>
 #include <optional>
 #include "game-data.hpp"
-#include "cards.hpp"
 
 // Handles startup of game
 class GameStartup {
     public:
-    friend class GameInProgress;
     GameStartup(std::shared_ptr<Shutdown<>> shutdown, std::mt19937 &randomizer);
     ~GameStartup() = default;
 
@@ -35,7 +33,7 @@ class GameStartup {
 
     GameData game;
     std::string picked_players_message{"PLAYERS-TAKEN\r\n"};
-    std::array<std::string, 22> cards_list{cards::all_cards};
+    std::array<std::string, 22> cards_list;
     std::optional<std::size_t> current_index{std::nullopt};
     std::size_t current_card = 0;
 
