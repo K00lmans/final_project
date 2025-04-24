@@ -47,7 +47,7 @@ int main(void) {
                 ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLET;
                 ev.data.fd = new_fd;
                 poll.ctl(EPOLL_CTL_ADD, new_fd, ev);
-                    return std::optional<int>(new_fd);
+                    return new_fd;
             });
             continue;
         }

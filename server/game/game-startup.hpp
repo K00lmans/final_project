@@ -26,24 +26,15 @@ class GameStartup {
 
     StartState try_ready_game();
     int get_fd() const { return game.poll.fd(); }
-    bool add_user(int fd) {
-        if (game.players.size() >= 6) {
-            return false;
-        }
-        game.add_player(fd);
-        if (!current_index.has_value()) {
-            current_index = std::optional(game.players.size() - 1);
-            game.add_player
-        }
-        return true;
-        // must send message on addition
-    }
+    std::optional<StartState> add_user(int fd);
     std::size_t size() const { return game.players.size(); }
     private:
-    StartState process_current_player_event(Player &player, uint32_t event);
-    StartState process_other_player_event(Player &player);
+    StartState process_in_event(Player &player);
+    StartState process_out_event(Player &player);
+    StartState initialize_new_player(Player &player);
+
     GameData game;
-    std::string picked_cards_msg{"PLAYERS-TAKEN\n"};
+    std::string picked_players_message{"PLAYERS-TAKEN\r\n"};
     std::array<std::string, 22> cards_list{cards::all_cards};
     std::optional<std::size_t> current_index{std::nullopt};
     std::size_t current_card = 0;
