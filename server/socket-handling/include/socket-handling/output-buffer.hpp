@@ -21,11 +21,18 @@ class OutputBuffer {
     public:
     OutputBuffer() = default;
 
+    OutputBuffer(const OutputBuffer &) = delete;
+    OutputBuffer &operator=(const OutputBuffer &) = delete;
+
+    OutputBuffer(OutputBuffer &&) = default;
+    OutputBuffer &operator=(OutputBuffer &&) = default;
+
     // Adds a message to the send queue.
     // This does not ever send a message, to do that you must call flush().
     void add_message(std::shared_ptr<std::string> msg) { outbuf.push_back(msg); }
 
     SocketStatus flush(int fd);
+    bool empty() const { return outbuf.empty(); }
 
     private:
 

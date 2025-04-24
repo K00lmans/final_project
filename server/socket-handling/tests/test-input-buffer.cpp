@@ -9,24 +9,21 @@ static void test_input_buffer(void) {
     assert(buf.size() == 0);
 
     auto retval = buf.buf_read(123);
-    assert(retval.has_value());
-    assert(retval.value() == SocketStatus::Blocked);
+    assert(retval == SocketStatus::Blocked);
     assert(buf.empty());
     assert(!buf.full());
     assert(buf.size() == 0);
 
     test_type = RwOption::RwZero;
     retval = buf.buf_read(123);
-    assert(retval.has_value());
-    assert(retval.value() == SocketStatus::ZeroReturned);
+    assert(retval == SocketStatus::ZeroReturned);
     assert(buf.empty());
     assert(!buf.full());
     assert(buf.size() == 0);
 
     test_type = RwOption::Err;
     retval = buf.buf_read(123);
-    assert(retval.has_value());
-    assert(retval.value() == SocketStatus::Error);
+    assert(retval == SocketStatus::Error);
     assert(buf.empty());
     assert(!buf.full());
     assert(buf.size() == 0);
@@ -35,8 +32,7 @@ static void test_input_buffer(void) {
     num_to_read = 111;
     retval = buf.buf_read(123);
 
-    assert(retval.has_value());
-    assert(retval.value() == SocketStatus::Blocked);
+    assert(retval == SocketStatus::Blocked);
     assert(!buf.empty());
     assert(!buf.full());
     assert(buf.size() == 111);
@@ -49,22 +45,19 @@ static void test_input_buffer(void) {
     num_to_read = 150;
     retval = buf.buf_read(123);
 
-    assert(retval.has_value());
-    assert(retval.value() == SocketStatus::Blocked);
+    assert(retval == SocketStatus::Blocked);
     assert(!buf.empty());
     assert(!buf.full());
     assert(buf.size() == 61 + 150);
 
     num_to_read = 12343;
     retval = buf.buf_read(123);
-    assert(retval.has_value());
-    assert(retval.value() == SocketStatus::Finished);
+    assert(retval == SocketStatus::Finished);
     assert(!buf.empty());
     assert(buf.full());
     assert(buf.size() == 255);
 
     retval = buf.buf_read(124);
-    assert(!retval.has_value());
     assert(!buf.empty());
     assert(buf.full());
     assert(buf.size() == 255);
@@ -76,8 +69,7 @@ static void test_input_buffer(void) {
 
     num_to_read = 20;
     retval = buf.buf_read(123);
-    assert(retval.has_value());
-    assert(retval.value() == SocketStatus::Blocked);
+    assert(retval == SocketStatus::Blocked);
     assert(!buf.empty());
     assert(!buf.full());
     assert(buf.size() == 255 - 123 + 20);

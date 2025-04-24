@@ -14,20 +14,19 @@
 #include <unordered_map>
 #include <iostream>
 #include <array>
+#include <sys/socket.h>
 #include <socket-handling/output-buffer.hpp>
 #include <socket-handling/timer.hpp>
 #include <socket-handling/fd-poll.hpp>
 
-template <std::size_t EPOLL_BUF_SIZE = 16, std::size_t CLOSE_TIME_MS = 60000>
+template <std::size_t EPOLL_BUF_SIZE = 16, std::size_t CLOSE_TIME_MS = 10000>
 class Shutdown {
     public:
-    Shutdown();
-    ~Shutdown();
-
     // Makes a best-effort attempt to shutdown the socket and ensure any messages sent to it are fully sent.
     // Assuming no errors occur, any messages already sent to the socket will be fully sent before the socket is actually closed.
-    void shutdown(int fd, OutputBuffer &&outbuf);
+    void shutdown_sock(int fd, OutputBuffer &&outbuf);
     void callback();
+    int get_fd() const { return poll.fd(); }
 
     private:
     enum SockState {
@@ -42,31 +41,35 @@ class Shutdown {
         ClosingSocket &operator=(ClosingSocket &&) = default;
 
         Timer timer;
-        OutputBuffer outbuf;
         int sock_fd;
+        OutputBuffer outbuf;
     };
 
-    std::unordered_map<int, ClosingSocket> map;
+    std::unordered_map<int, ClosingSocket> map{};
     FdPoll poll;
     std::array<epoll_event, EPOLL_BUF_SIZE> event_list;
 };
 
 
 template <std::size_t EPOLL_BUF_SIZE, std::size_t CLOSE_TIME_MS>
-void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&outbuf) {
+void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown_sock(int fd, OutputBuffer &&outbuf) {
     try {
         ClosingSocket sock(fd, std::move(outbuf));
         SocketStatus status = sock.outbuf.flush(fd);
-        epoll_event ev{ .events = EPOLLOUT | EPOLLRDHUP, .data = {.fd = fd} };
+        epoll_event ev{ .events = EPOLLOUT | EPOLLRDHUP | EPOLLET, .data = {.fd = fd} };
         switch (status) {
         case SocketStatus::Finished:
-            ev.events = EPOLLRDHUP;
         case SocketStatus::Blocked:
+            if (sock.outbuf.empty()) {
+                ev.events = EPOLLRDHUP | EPOLLET;
+                std::cout << "Called shutdown on fd." << std::endl;
+                shutdown(fd, SHUT_WR);
+            }
             sock.timer.set(CLOSE_TIME_MS);
             poll.ctl(EPOLL_CTL_ADD, fd, ev);
             ev.events = EPOLLIN;
             poll.ctl(EPOLL_CTL_ADD, sock.timer.get_fd(), ev); // making the timerfd "point" to the fd of the socket we want to close; epoll will tell us how to find the proper stuff in our hashmap
-            map.insert(std::pair(fd, std::move(sock)));
+            map.try_emplace(fd, std::move(sock));
             break;
         case SocketStatus::ZeroReturned:
             throw std::system_error(0, std::generic_category(), "Write returned 0 when trying to send closing message.");
@@ -87,7 +90,7 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown(int fd, OutputBuffer &&ou
 template <std::size_t EPOLL_BUF_SIZE, std::size_t CLOSE_TIME_MS>
 void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::callback() {
     std::span<epoll_event> events(
-        poll.wait(std::span(event_list))
+        poll.wait(std::span(event_list), 0)
     );
     for (const epoll_event &ev : events) {
         epoll_event temp_ev;
@@ -100,25 +103,30 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::callback() {
             // exception here means the epoll this class relies on is cooked, so it's reasonable to terminate the server
             // in future I'd probably do better error handling than this but hey it shouuuld work fine so I don't care
             poll.ctl(EPOLL_CTL_DEL, ev.data.fd, temp_ev);
-            poll.ctl(EPOLL_CTL_DEL, map[ev.data.fd].timer.fd(), temp_ev);
+            poll.ctl(EPOLL_CTL_DEL, map.at(ev.data.fd).timer.get_fd(), temp_ev);
             close_except(ev.data.fd);
             // timerfd destructs automatically, thank you RAII
             map.erase(ev.data.fd);
             continue;
         }
 
-        SocketStatus status = map[ev.data.fd].outbuf.flush(ev.data.fd);
+        OutputBuffer &outbuf = map.at(ev.data.fd).outbuf;
+        SocketStatus status = outbuf.flush(ev.data.fd);
         switch (status) {
         case SocketStatus::Finished:
-            temp_ev.events = EPOLLRDHUP;
-            poll.ctl(EPOLL_CTL_MOD, ev.data.fd, temp_ev);
-            break;
         case SocketStatus::Blocked:
+            if (outbuf.empty()) {
+                temp_ev.events = EPOLLRDHUP | EPOLLET;
+                temp_ev.data.fd = ev.data.fd;
+                poll.ctl(EPOLL_CTL_MOD, ev.data.fd, temp_ev);
+                std::cout << "Called shutdown() on fd" << std::endl;
+                shutdown(ev.data.fd, SHUT_WR);
+            }
             break;
         case SocketStatus::ZeroReturned:
         case SocketStatus::Error:
             poll.ctl(EPOLL_CTL_DEL, ev.data.fd, temp_ev);
-            poll.ctl(EPOLL_CTL_DEL, map[ev.data.fd].timer.fd(), temp_ev);
+            poll.ctl(EPOLL_CTL_DEL, map.at(ev.data.fd).timer.get_fd(), temp_ev);
             close_except(ev.data.fd);
             // timerfd destructs automatically, thank you RAII
             map.erase(ev.data.fd);
