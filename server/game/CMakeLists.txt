@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.12)
 
 
 # libraries are marked STATIC here because i want the server binary to be nice and self-contained; if there are ever any config files those will get placed in either ~/.config/clueserv/* or just directly thrown in home as a ~/.clueserv file

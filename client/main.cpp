@@ -1,5 +1,5 @@
 /*
- *Kodiak O'Masta, [TEAMMATES]
+ *Athena Boose, Kodiak O'Masta, Ryan Gradinaru
  *Created for CptS 122
  *Created 3-28-25
  *
