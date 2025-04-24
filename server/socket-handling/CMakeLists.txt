@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.25)
 
 add_subdirectory(tests)
 
-add_library(socket-handling
+add_library(socket-handling STATIC
     include/socket-handling/fd-utils.hpp
     include/socket-handling/output-buffer.hpp
     include/socket-handling/input-buffer.hpp
@@ -16,5 +16,5 @@ add_library(socket-handling
     connection-factory.cpp
 )
 
-target_compile_features(socket-handling PUBLIC cxx_std_23)
+target_compile_features(socket-handling PUBLIC cxx_std_20)
 target_include_directories(socket-handling PUBLIC include)

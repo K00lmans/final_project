@@ -39,16 +39,16 @@ int main(void) {
             return EXIT_SUCCESS;
         }
         if (update[0].data.fd == connfact.get_fd()) {
-            connfact.get_new_connection().transform([&fdmap, &ev, &poll](int new_fd){
+            auto new_conn = connfact.get_new_connection();
+            if (new_conn.has_value()) {
                 fdmap.try_emplace(
-                    new_fd,
+                    new_conn.value(),
                     std::move(std::pair(std::move(InputBuffer<63>()), std::move(OutputBuffer())))
                 );
                 ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLET;
-                ev.data.fd = new_fd;
-                poll.ctl(EPOLL_CTL_ADD, new_fd, ev);
-                    return std::optional<int>(new_fd);
-            });
+                ev.data.fd = new_conn.value();
+                poll.ctl(EPOLL_CTL_ADD, new_conn.value(), ev);
+            }
             continue;
         }
         if (update[0].data.fd == shut.get_fd()) {
@@ -111,6 +111,5 @@ int main(void) {
             continue;
         }
         abort();
-        endloop:
     }
 }

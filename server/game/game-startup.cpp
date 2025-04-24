@@ -1,113 +1,10 @@
 #include <memory>
-#include "game-startup.hpp"
+#include <algorithm>
+#include <game/game-startup.hpp>
 #include "parsing.hpp"
+#include "cards.hpp"
 
-// the below code is really terrible but the logic for this just inherently sucks, so not much i can do about it lol
-
-static GameStartup::StartState flush_propagate_error(Player &player, FdPoll &poll) {
-    epoll_event ev{ .events = EPOLLRDHUP, .data = {.fd = player.fd}};
-    switch (player.outbuf.flush(player.fd)) {
-    case SocketStatus::Error:
-    case SocketStatus::ZeroReturned:
-        return GameStartup::Error;
-    case SocketStatus::Finished:
-        poll.ctl(EPOLL_CTL_MOD, player.fd, ev);
-    case SocketStatus::Blocked:
-        return GameStartup::Ready;
-    }
-    return GameStartup::Error;
-}
-
-GameStartup::StartState GameStartup::process_current_player_event(Player &player, uint32_t event) {
-    bool just_sent = false;
-    if (event & EPOLLIN) {
-        // the optional should always have a value, we check for full later
-        std::optional<std::size_t> end_index;
-        switch (player.inbuf.buf_read(player.fd)) {
-        case SocketStatus::Blocked:
-        case SocketStatus::Finished:
-            end_index = player.inbuf.get_msg_end();
-            if (player.inbuf.full() && !end_index.has_value()) {
-                // don't have a message, buffer is full, this is an error
-                return Error;
-            }
-            if (!end_index.has_value()) {
-                return NotReady;
-            }
-            picked_cards_msg[picked_cards_msg.size() - 1] = ',';
-            if (!get_player_name(player.inbuf, end_index.value(), picked_cards_msg)) {
-                return Error;
-            }
-            // sending cards message
-            player.outbuf.add_message(std::shared_ptr<std::string>(new std::string(
-            "PLAYER-CARDS," + cards_list[current_card] + "," + cards_list[current_card + 1] + "," + cards_list[current_card + 2] + "\r\n"
-            )));
-            current_card += 3;
-
-            if (flush_propagate_error(player, game.poll) == Error) {
-                return Error;
-            }
-
-            // don't need to advance to the next player
-            if (current_index.value() == game.players.size() - 1) {
-                if (game.players.size() >= 3) {
-                    return Ready;
-                }
-                else {
-                    current_index = std::nullopt;
-                    return NotReady;
-                }
-            }
-
-            // need to advance to the next player
-            ++(current_index.value());
-            game.players[current_index.value()].outbuf.add_message(std::shared_ptr<std::string>(new std::string(picked_cards_msg)));
-            if (flush_propagate_error(game.players[current_index.value()], game.poll) == Error) {
-                return Error;
-            }
-            return NotReady;
-        case SocketStatus::ZeroReturned:
-        case SocketStatus::Error:
-            return Error;
-        }
-    }
-    if (event & EPOLLOUT || just_sent) {
-        auto result = player.outbuf.flush(player.fd);
-        epoll_event ev;
-        switch (result) {
-        case SocketStatus::Blocked:
-            return NotReady;
-        case SocketStatus::Finished:
-            // first write finished, now we wait for the user to send us something back
-            ev.data.fd = player.fd;
-            ev.events = EPOLLIN | EPOLLRDHUP | EPOLLET;
-            game.poll.ctl(EPOLL_CTL_MOD, player.fd, ev);
-            return NotReady; // still gotta wait for a response
-        case SocketStatus::Error:
-        case SocketStatus::ZeroReturned:
-            return Error;
-        }
-    }
-    return Error;
-}
-
-GameStartup::StartState GameStartup::process_other_player_event(Player &player) {
-    // always gonna be EPOLLOUT
-    epoll_event ev{ .events = EPOLLRDHUP, .data = { .fd = player.fd } };
-
-    switch (player.outbuf.flush(player.fd)) {
-    case SocketStatus::Error:
-    case SocketStatus::ZeroReturned:
-        return Error;
-    case SocketStatus::Finished:
-        game.poll.ctl(EPOLL_CTL_MOD, player.fd, ev);
-    case SocketStatus::Blocked:
-        return NotReady;
-    }
-    return NotReady;
-}
-
-GameStartup::GameStartup(std::shared_ptr<Shutdown<>> shutdown, std::mt19937 &randomizer) : game(shutdown) {
+GameStartup::GameStartup(std::shared_ptr<Shutdown<>> shutdown, std::mt19937 &randomizer) : game(shutdown), cards_list(cards::all_cards) {
     std::uniform_int_distribution<std::mt19937::result_type> suspects_dist(0, 5);
     std::uniform_int_distribution<std::mt19937::result_type> weapons_dist(0, 6);
     std::uniform_int_distribution<std::mt19937::result_type> rooms_dist(0, 8);
@@ -120,18 +17,123 @@ GameStartup::GameStartup(std::shared_ptr<Shutdown<>> shutdown, std::mt19937 &ran
 }
 
 GameStartup::StartState GameStartup::try_ready_game() {
-    // must deal with shit thingy 
     if (size() == 0) {
         return NotReady;
     }
     std::array<epoll_event, 1> ep_ev;
-    auto result = game.poll.wait(std::span(ep_ev), 0);
+    std::span<epoll_event> result = game.poll.wait(std::span(ep_ev), 0);
     if (
-        result[0].events & EPOLLRDHUP ||
-        result[0].events & EPOLLERR ||
-        result[0].events & EPOLLHUP
+        (result[0].events & EPOLLRDHUP) ||
+        (result[0].events & EPOLLERR) ||
+        (result[0].events & EPOLLHUP)
     ) {
         return Error;
     }
-    // this not done yeet
+
+    if (result[0].events & EPOLLOUT) {
+        for (Player &pl : game.players) {
+            if (pl.fd == result[0].data.fd) {
+                return process_out_event(pl);
+            }
+        }
+    }
+    else if (result[0].events & EPOLLIN) {
+        return process_in_event(game.players[current_index.value()]);
+    }
+
+    return Error;
 }
+
+std::optional<GameStartup::StartState> GameStartup::add_user(int fd) {
+    if (game.players.size() >= 6) {
+        return std::optional<StartState>(std::nullopt);
+    }
+    game.add_player(fd);
+    if (!current_index.has_value()) {
+        current_index = std::optional(game.players.size() - 1);
+        return std::optional(initialize_new_player(game.players[current_index.value()]));
+    }
+    return std::optional(NotReady);
+}
+
+// the below code is really terrible but the logic for this just inherently sucks, so not much i can do about it lol
+
+GameStartup::StartState GameStartup::process_in_event(Player &player) {
+    std::optional<std::size_t> msg_end;
+    epoll_event ev{ .events = EPOLLRDHUP | EPOLLET, .data = { .fd = player.fd } };
+    switch (player.inbuf.buf_read(player.fd)) {
+    case SocketStatus::Error:
+    case SocketStatus::ZeroReturned:
+        return Error; // can error out here because even if they sent us stuff they won't be present for the game to start!
+    case SocketStatus::Finished:
+    case SocketStatus::Blocked:
+        msg_end = player.inbuf.get_msg_end();
+        if (!msg_end.has_value()) {
+            return (player.inbuf.full()) ? Error : NotReady;
+        }
+        
+        // added their selected name to the names-string
+        if (!get_player_name(player.inbuf, msg_end.value(), picked_players_message)) {
+            return Error;
+        }
+
+        // remove just the input flag from the player's eventlist
+        ev.events |= (player.outbuf.empty()) ? 0 : (uint32_t)EPOLLOUT;
+        game.poll.ctl(EPOLL_CTL_MOD, player.fd, ev);
+
+        if (current_index.value() == game.players.size() - 1) {
+            current_index = std::optional<std::size_t>(std::nullopt);
+            if (game.players.size() >= 3) {
+                return Ready;
+            }
+            else {
+                return NotReady;
+            }
+        }
+
+    }
+    return Error; // clangd isn't smart enough to know that the above switch handles all cases
+}
+
+GameStartup::StartState GameStartup::process_out_event(Player &player) {
+    // just let us know when the socket breaks
+    epoll_event ev{ .events = EPOLLRDHUP | EPOLLET, .data = { .fd = player.fd } };
+
+    switch (player.outbuf.flush(player.fd)) {
+    case SocketStatus::Error:
+    case SocketStatus::ZeroReturned:
+        return Error;
+    case SocketStatus::Finished:
+    case SocketStatus::Blocked:
+        if (player.outbuf.empty()) {
+            game.poll.ctl(EPOLL_CTL_MOD, player.fd, ev);
+        }
+        return NotReady;
+    }
+    return NotReady;
+}
+
+
+GameStartup::StartState GameStartup::initialize_new_player(Player &player) {
+    epoll_event ev { .events = EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLET, .data = {.fd = player.fd}};
+    player.outbuf.add_message(
+        std::shared_ptr<std::string>(new std::string(
+            picked_players_message + "PLAYER-CARDS," + cards_list[current_card] + "," + cards_list[current_card + 1] + "," + cards_list[current_card + 2] + "\r\n"
+        ))
+    );
+    current_card += 3;
+    switch (player.outbuf.flush(player.fd)) {
+    case SocketStatus::ZeroReturned:
+    case SocketStatus::Error:
+        return Error;
+    case SocketStatus::Finished:
+    case SocketStatus::Blocked:
+        if (player.outbuf.empty()) {
+            ev.events = EPOLLIN | EPOLLRDHUP | EPOLLET;
+        }
+        game.poll.ctl(EPOLL_CTL_ADD, player.fd, ev);
+        return NotReady;
+    }
+    return Error;
+}
+

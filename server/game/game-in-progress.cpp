@@ -1,6 +1,6 @@
 #include <span>
 #include <socket-handling/fd-utils.hpp>
-#include "game-in-progress.hpp"
+#include <game/game-in-progress.hpp>
 
 static void delete_bad_player(std::vector<Player> &players, Player &bad_player) {
     Player &good_player = players[players.size() - 1];
