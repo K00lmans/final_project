@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 add_subdirectory(tests)
 
-add_library(socket-handling
+add_library(socket-handling STATIC
     include/socket-handling/fd-utils.hpp
     include/socket-handling/output-buffer.hpp
     include/socket-handling/input-buffer.hpp
