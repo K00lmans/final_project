@@ -18,24 +18,7 @@
  *dedicated to his struggles with this game.
  */
 
-#include <SFML/Graphics.hpp>
-#include "Scratch_Pad.h"
-#include <iostream>
-#include "GameCode/Token.hpp"
-#include "GameCode/TokenID.hpp"
-#include "GameCode/Board.hpp"
-#include "GameCode/Room.hpp"
-#include "GameCode/BoardSetup.hpp"
-#include "GameCode/Player.hpp"
-
-// Global variables
-double window_scaler = .75; // The scaler for the y size of the window based on the users screen. Can not be 1 or greater
-double background_size[2] = {1162.0, 1159.0}; // Size in pixels of the background image
-
-// Just putting these here for now, probably should be moved later
-unsigned int get_window_x_size(const sf::Vector2u size) {
-    return static_cast<unsigned int>(((size.y * window_scaler) * (background_size[0] / background_size[1])));
-}
+#include "main.h"
 
 int main() {
     // Window setup
@@ -62,6 +45,7 @@ int main() {
     auto Mrs_Peacock = Token(TokenID::MRS_PEACOCK);
     auto Mrs_White = Token(TokenID::MRS_WHITE);
     Board clue_board = getBoardFromFile(); // Can this not just be a constructor? -Kodiak
+    Player *players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
 
     // Main game loop
     while (main_game_window.isOpen()) {

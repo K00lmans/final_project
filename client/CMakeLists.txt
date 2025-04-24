@@ -14,6 +14,8 @@ add_executable(client-bin
         Scratch_Pad.cpp
         Scratch_Pad.h
  "GameCode/Board.cpp" "GameCode/BoardSetup.cpp" "GameCode/Clue.cpp" "GameCode/Player.cpp" "GameCode/Room.cpp" "GameCode/Tile.cpp" "GameCode/Token.cpp" "GameCode/TokenID.cpp" "GameCode/BoardData.cpp"
+        main.h
+        functions.cpp
 )
 
 target_link_libraries(client-bin PRIVATE SFML::Graphics)

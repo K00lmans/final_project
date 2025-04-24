@@ -40,7 +40,7 @@ void Player::movePlayer(Board& gameBoard) {
 	position = legalMoves.at(choice - 1);
 	
 
-	for (Room boardRoom : gameBoard.getRooms()) {
+	for (const Room& boardRoom : gameBoard.getRooms()) {
 		for (Tile door : boardRoom.getDoors()) {
 			if (position == door) {
 				position = boardRoom.getChair();

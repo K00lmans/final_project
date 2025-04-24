@@ -1,9 +1,9 @@
+#pragma once
 #include "Token.hpp"
 #include "Tile.hpp"
 #include "Board.hpp"
 
 class Player {
-private:
 	Token characterToken;
 	Tile position;
 public:
