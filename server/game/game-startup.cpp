@@ -130,8 +130,8 @@ GameStartup::StartState GameStartup::initialize_new_player(Player &player) {
     case SocketStatus::Blocked:
         if (player.outbuf.empty()) {
             ev.events = EPOLLIN | EPOLLRDHUP | EPOLLET;
+            game.poll.ctl(EPOLL_CTL_MOD, player.fd, ev);
         }
-        game.poll.ctl(EPOLL_CTL_ADD, player.fd, ev);
         return NotReady;
     }
     return Error;

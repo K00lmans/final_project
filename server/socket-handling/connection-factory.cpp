@@ -87,6 +87,7 @@ std::optional<int> ConnectionFactory::get_new_connection() {
     if (fcntl(new_fd, F_SETFL, O_NONBLOCK) == -1) {
         throw std::system_error(errno, std::generic_category(), "Could not set connection-descriptor to nonblocking.");
     }
+    std::cout <<new_fd << std::endl;
     return std::optional(new_fd);
 }
 

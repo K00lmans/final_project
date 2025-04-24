@@ -7,14 +7,13 @@
 //              This is a struct rather than a class since it's mainly intended to hold a bit of data.
 //
 
-#include <utility>
 #include <string>
 #include <socket-handling/input-buffer.hpp>
 #include <socket-handling/output-buffer.hpp>
 
 struct Player {
     Player() = delete;
-    Player(int fd, std::string &&character) : fd(fd), character(std::move(character)) {}
+    Player(int fd) : fd(fd) {}
 
     Player(const Player &) = delete;
     Player &operator=(const Player &) = delete;
@@ -28,5 +27,4 @@ struct Player {
     InputBuffer<128> inbuf;
     OutputBuffer outbuf;
     int fd;
-    std::string character;
 };

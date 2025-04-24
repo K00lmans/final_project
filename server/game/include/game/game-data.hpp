@@ -34,6 +34,7 @@ struct GameData {
     void add_player(int fd) {
         epoll_event ev{.events = EPOLLRDHUP, .data = {.fd = fd}};
         poll.ctl(EPOLL_CTL_ADD, fd, ev);
+        players.emplace_back(fd);
     }
 
     std::vector<Player> players;
