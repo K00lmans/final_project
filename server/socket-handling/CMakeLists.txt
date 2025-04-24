@@ -8,9 +8,12 @@ add_library(socket-handling
     include/socket-handling/input-buffer.hpp
     include/socket-handling/fd-poll.hpp
     include/socket-handling/shutdown.hpp
+    include/socket-handling/timer.hpp
     fd-utils.cpp
     output-buffer.cpp
     fd-poll.cpp
+    timer.cpp
+    connection-factory.cpp
 )
 
 target_compile_features(socket-handling PUBLIC cxx_std_23)

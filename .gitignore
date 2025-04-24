@@ -10,4 +10,6 @@ out
 *.swp
 docs
 cmake-build-debug
+**/vgcore.*
+#**/scratch_pads/
 # if you think of anything else to .gitignore please lmk

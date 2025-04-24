@@ -4,6 +4,8 @@
 #include <climits>
 #include <socket-handling/fd-utils.hpp>
 
+#include <iostream> // debugging
+
 // 
 // Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
 // 
@@ -39,13 +41,13 @@ class InputBuffer {
     }
 
 
-    std::optional<SocketStatus> buf_read(int fd) {
+    SocketStatus buf_read(int fd) {
         // this kinda just bruteforces all the different states a ringbuffer can be in
         // it's not elegant but I had a hard time thinking about this and covering all edge cases
 
         // check for full buffer
         if (full()) {
-            return std::optional<SocketStatus>(std::nullopt);
+            return SocketStatus::Finished;
         }
 
         std::array<iovec, 2> iov{};
@@ -60,32 +62,32 @@ class InputBuffer {
         }
         else if (start > end) {
             iov[0].iov_len = start - end - 1;
-            iov[0].iov_base = iov.data() + end;
+            iov[0].iov_base = buffer.data() + end;
             iovcnt = 1;
         }
         else if (start == 0) {
             iov[0].iov_len = truesize() - end - 1; // leave an empty spot at buffer end
-            iov[0].iov_base = iov.data() + end;
+            iov[0].iov_base = buffer.data() + end;
             iovcnt = 1;
         }
         else if (start == 1) {
             iov[0].iov_len = truesize() - end;
-            iov[0].iov_base = iov.data() + end; // fill it all up, we have space
+            iov[0].iov_base = buffer.data() + end; // fill it all up, we have space
             iovcnt = 1;
         }
         else {
             iov[0].iov_len = truesize() - end;
-            iov[0].iov_base = iov.data() + end;
+            iov[0].iov_base = buffer.data() + end;
             iov[1].iov_len = start - 1;
-            iov[1].iov_base = iov.data();
+            iov[1].iov_base = buffer.data();
             iovcnt = 2;
         }
         auto retval = exhaustive_readv(fd, iov.data(), iovcnt);
         if (retval.first == -1 || retval.first == 0) {
-            return std::optional(retval.second);
+            return retval.second;
         }
         end = mod(end + retval.first);
-        return std::optional(retval.second);
+        return retval.second;
     }
     void pop_front(std::size_t amount) {
         // should assert that amount <= size()!!!
@@ -95,9 +97,19 @@ class InputBuffer {
     // Returns the end-index of a message in the buffer, if it exists.
     // The '\n' at the end of the message is included.
     std::optional<std::size_t> get_msg_end() const {
+        bool in_end_seq = false;
         for (std::size_t i = 0; i < size(); ++i) {
-            if (operator[](i) == '\n') {
-                return std::optional(i + 1);
+            if (operator[](i) == '\r') {
+                in_end_seq = true;
+                continue;
+            }
+            if (in_end_seq) {
+                if (operator[](i) == '\n') {
+                    return std::optional(i + 1);
+                }
+                else {
+                    in_end_seq = false;
+                }
             }
         }
         return std::optional<std::size_t>(std::nullopt);

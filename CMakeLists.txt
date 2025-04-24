@@ -3,6 +3,12 @@ project(i-havent-a-clue CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug) # change to Release when building a release!!
+
+
+if(DEFINED USE_ASAN)
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
+    set(CMAKE_CXX_FLAGS "-fsanitize=address -fsanitize-recover=address -fsanitize=undefined -fsanitize=leak") # comment this out if you want to check for leaks with valgrind
+endif()
 include(CTest)
 
 if (NOT DEFINED BUILD_CLIENT)

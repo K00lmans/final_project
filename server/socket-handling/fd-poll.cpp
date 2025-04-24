@@ -15,6 +15,7 @@
 
 FdPoll::FdPoll() {
     errno = 0;
+    epfd = epoll_create1(0);
     if (epfd == -1) {
         throw std::system_error(errno, std::generic_category(), "Could not create epoll instance.");
     }
@@ -48,7 +49,7 @@ void FdPoll::ctl(int op, int fd, epoll_event &event) {
     }
 }
 
-std::span<epoll_event> FdPoll::wait(std::span<epoll_event> events, int timeout) {
+std::span<epoll_event> FdPoll::wait(const std::span<epoll_event> &events, int timeout) {
     errno = 0;
     int retval = epoll_wait(epfd, events.data(), events.size(), timeout);
     if (retval == -1) {
