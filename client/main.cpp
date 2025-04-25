@@ -21,8 +21,14 @@
 #include "main.h"
 
 int main() {
-    // Window setup
     screen_size = sf::VideoMode::getDesktopMode().size;
+
+    // Game setup
+    Board clue_board = getBoardFromFile(); // Can this not just be a constructor? -Kodiak
+    Player *players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; // I have an irrational love of c arrays
+    pick_characters(players);
+
+    // Window setup
     auto main_game_window = sf::RenderWindow(sf::VideoMode({get_window_x_size(),
         static_cast<unsigned>(screen_size.y * window_scaler)}), "Clue", sf::Style::Close);
     auto background_image = sf::Texture("client/graphics/clue_board.jpg");
@@ -34,16 +40,6 @@ int main() {
     });
     Scratch_Pad::clear_data(); // Emptys old data
     std::unique_ptr<Scratch_Pad> current_users_pad;
-
-    // Game setup
-    auto Ms_Scarlet = Token(TokenID::MS_SCARLET);
-    auto Col_Mustard = Token(TokenID::COL_MUSTARD);
-    auto Prof_Plum = Token(TokenID::PROF_PLUM);
-    auto Mr_Green = Token(TokenID::MR_GREEN);
-    auto Mrs_Peacock = Token(TokenID::MRS_PEACOCK);
-    auto Mrs_White = Token(TokenID::MRS_WHITE);
-    Board clue_board = getBoardFromFile(); // Can this not just be a constructor? -Kodiak
-    Player *players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; // I have an irrational love of c arrays
 
     // Main game loop
     while (main_game_window.isOpen()) {
@@ -61,12 +57,6 @@ int main() {
             current_users_pad->update();
         }
     }
-
-    Player player1 = Player(Mrs_Peacock, Tile(0, 18));
-
-    clue_board.deleteToken(Mrs_Peacock, Tile(0, 18));
-    player1.setPosition(Tile(6, 15));
-    clue_board.placeToken(Mrs_Peacock, Tile(6, 15));
 
     for (auto &player : players) {
         delete player;
