@@ -21,6 +21,8 @@ void kill_sock(int sock, FdPoll &poll, Shutdown<> &shut, std::unordered_map<int,
 
 void renew_game(GameStartup &pending_game, std::shared_ptr<Shutdown<>> shut, std::mt19937 &randomizer, FdPoll &poll);
 
+void handle_gamestartup(GameStartup::StartState state, GameStartup &pending_game, std::shared_ptr<Shutdown<>> shut, std::mt19937 &randomizer, FdPoll &poll);
+
 // there's not really a good way to make this cleaner, the final event loop's just gonna be large, complicated, and annoying as hell
 // breaking it up into a bunch of functions would just obscure things
 
@@ -73,22 +75,15 @@ void run_server(const std::string &port, rlim_t fd_limit) {
             }
             auto game_result = pending_game.add_user(result.value());
             if (game_result.has_value()) {
-                switch (game_result.value()) {
-                case GameStartup::NotReady:
-                    break;
-                case GameStartup::Error:
-                    std::cerr << "Failed to startup game, removing it." << std::endl;
-                    poll.ctl(EPOLL_CTL_DEL, pending_game.get_fd(), ev);
-                    renew_game(pending_game, shut, randomizer, poll);
-                    break;
-                case GameStartup::Ready:
-                    std::cerr << "Game started successfully!" << std::endl;
-                    // IMPLEMENT ACTUAL GAME CODE AND MOVE THE CORE OF THE GAME INTO THE NEW GAME THINGY
-                    poll.ctl(EPOLL_CTL_DEL, pending_game.get_fd(), ev);
-                    renew_game(pending_game, shut, randomizer, poll);
-                    break;
-                }
+                handle_gamestartup(game_result.value(), pending_game, shut, randomizer, poll);
             }
+            else {
+                // ACTUALLY START THE GAME
+                renew_game(pending_game, shut, randomizer, poll);
+            }
+        }
+        else if (update[0].data.fd == pending_game.get_fd()) {
+            handle_gamestartup(pending_game.try_ready_game(), pending_game, shut, randomizer, poll);
         }
         else {
             throw std::runtime_error("idk something went wrong");

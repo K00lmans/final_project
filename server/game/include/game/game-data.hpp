@@ -29,7 +29,16 @@ struct GameData {
     GameData &operator=(const GameData &) = delete;
 
     GameData(GameData &&) = default;
-    GameData &operator=(GameData &&) = default;
+    GameData &operator=(GameData &&data) {
+        for (Player &player : players) {
+            shutdown_singleton->shutdown_sock(player.fd, std::move(player.outbuf));
+        }
+        players = std::move(data.players);
+        poll = std::move(data.poll);
+        win_cards = std::move(data.win_cards);
+        shutdown_singleton = std::move(data.shutdown_singleton);
+        return *this;
+    }
 
     void add_player(int fd) {
         epoll_event ev{.events = EPOLLRDHUP, .data = {.fd = fd}};
