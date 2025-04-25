@@ -22,6 +22,7 @@ add_library(private-game-utils STATIC
     parsing.hpp
     cards.cpp
 )
+target_link_libraries(private-game-utils PUBLIC socket-handling)
 
 target_link_libraries(game-serverside PRIVATE private-game-utils)
 target_link_libraries(game-serverside PUBLIC socket-handling)
