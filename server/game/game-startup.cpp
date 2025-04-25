@@ -90,9 +90,13 @@ GameStartup::StartState GameStartup::process_in_event(Player &player) {
                 return NotReady;
             }
         }
+        else {
+            ++(current_index.value());
+            return initialize_new_player(game.players[current_index.value()]);
+        }
 
     }
-    return Error; // clangd isn't smart enough to know that the above switch handles all cases
+    throw std::runtime_error("how did this get here?");
 }
 
 GameStartup::StartState GameStartup::process_out_event(Player &player) {
@@ -130,8 +134,8 @@ GameStartup::StartState GameStartup::initialize_new_player(Player &player) {
     case SocketStatus::Blocked:
         if (player.outbuf.empty()) {
             ev.events = EPOLLIN | EPOLLRDHUP | EPOLLET;
+            game.poll.ctl(EPOLL_CTL_MOD, player.fd, ev);
         }
-        game.poll.ctl(EPOLL_CTL_ADD, player.fd, ev);
         return NotReady;
     }
     return Error;

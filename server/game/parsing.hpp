@@ -7,6 +7,7 @@ bool get_player_name(const InputBuffer<BUF_SIZE> &msg_string, std::size_t msg_le
     const std::string PLAYER_NAME("PLAYER-SELECT,");
     out_string.pop_back();
     out_string.pop_back();
+    out_string.push_back(',');
     if (PLAYER_NAME.size() >= msg_len || msg_string.size() < msg_len) {
         return false;
     }
