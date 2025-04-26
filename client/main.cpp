@@ -27,6 +27,7 @@ int main() {
     Board clue_board = getBoardFromFile(); // Can this not just be a constructor? -Kodiak
     Player *players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; // I have an irrational love of c arrays
     pick_characters(players);
+    int current_player = generate_random_int(0, 5); // Picks the starting player
 
     // Window setup
     auto main_game_window = sf::RenderWindow(sf::VideoMode({get_window_x_size(),

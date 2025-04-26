@@ -24,11 +24,11 @@ class Board {
 
 public:
 	int* getBoard();
-	int getValueAtTile(Tile tile) const;
+	[[nodiscard]] int getValueAtTile(Tile tile) const;
 
 	void addRoom(Room newRoom);
 
-	const vector<Room>& getRooms() const;
+	[[nodiscard]] const vector<Room>& getRooms() const;
 
 	void placeToken(Token token, Tile tile);
 	void deleteToken(Token token, Tile tile);
