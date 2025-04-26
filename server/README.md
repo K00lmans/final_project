@@ -35,6 +35,8 @@ So, a few system calls could probably be avoided there with a quick refactor.
 
 Also, having separate returns for completed and blocked IO was kinda dumb in retrospect.
 Either will reset epoll; there is literally no difference between the two for my usecases here.
+Same for passing `InputBuffer`s around instead of just having the get message function return a std::string.
+It sounded like a good idea when I was originally writing the lower-level network/buffer management code, but it wasn't one in practice.
 
 Finally, this code could probably be tested more rigorously than it currently is.
 There are some test cases (see the `game/tests` and `socket-handling/tests` directories), but network code is kinda just inherently hard to test.
