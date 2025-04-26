@@ -44,7 +44,14 @@ int main() {
     background_image.setSmooth(true); // Can cause weird issues but should be fine since it is the background
     const auto background = sf::Sprite(background_image);
 
-    const auto character_textures = get_player_textures();
+    // This was a function, but the smart pointers where making that hard
+    const unique_ptr<sf::Texture> character_textures[6] = {
+        make_unique<sf::Texture>(sf::Texture("client/graphics/colonel_mustard.jpg")),
+        make_unique<sf::Texture>(sf::Texture("client/graphics/miss_scarlet.jpg")),
+        make_unique<sf::Texture>(sf::Texture("client/graphics/professor_plum.jpg")),
+        make_unique<sf::Texture>(sf::Texture("client/graphics/mr_green.jpg")),
+        make_unique<sf::Texture>(sf::Texture("client/graphics/mrs_white.jpg")),
+        make_unique<sf::Texture>(sf::Texture("client/graphics/mrs_peacock.jpg"))};
     const auto empty_texture = make_unique<sf::Texture>(sf::Texture("client/graphics/blank.png"));
     std::unique_ptr<sf::Sprite> board_squares[24][25];
     for (int x = 0; x < 24; x++) {
@@ -57,8 +64,16 @@ int main() {
                 static_cast<float>(upper_board_corner[1] + y * square_size)});
         }
     }
-    for (int player = 0; player < 6; player++) {
-        board_squares[players[player]->position.getX()][players[player]->position.getY()]->setTexture(*character_textures[player]);
+    for (int player = 0; player < 6; player++) { // Every fiber of my being despises this loop
+        const auto original_size =
+            board_squares[players[player]->position.getX()][players[player]->position.getY()]->getTextureRect().size;
+        board_squares[players[player]->position.getX()][players[player]->position.getY()]->setTexture(
+            *character_textures[player], true);
+        const auto new_size =
+            board_squares[players[player]->position.getX()][players[player]->position.getY()]->getTextureRect().size;
+        board_squares[players[player]->position.getX()][players[player]->position.getY()]->scale(
+            {static_cast<float>(original_size.x / new_size.x), static_cast<float>(original_size.y /
+                new_size.y)});
     }
 
     Scratch_Pad::clear_data(); // Emptys old data

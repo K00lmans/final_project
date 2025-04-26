@@ -59,19 +59,4 @@ int generate_random_int(T min, T max) {
     return static_cast<int>(std::uniform_int_distribution<std::mt19937::result_type>(min, max)(rng_device));
 }
 
-template<typename T>
-double generate_random_double(T min, T max) {
-    return std::uniform_real_distribution<std::mt19937::result_type>(min, max)(rng_device);
-}
-
-// This is such a cursed function
-inline auto get_player_textures() {
-    return std::vector({new sf::Texture("client/graphics/colonel_mustard.jpg"),
-        new sf::Texture("client/graphics/miss_scarlet.jpg"),
-        new sf::Texture("client/graphics/professor_plum.jpg"),
-        new sf::Texture("client/graphics/mr_green.jpg"),
-        new sf::Texture("client/graphics/mrs_white.jpg"),
-        new sf::Texture("client/graphics/mrs_peacock.jpg")});
-}
-
 #endif //MAIN_H
