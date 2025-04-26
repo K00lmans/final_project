@@ -21,10 +21,9 @@ struct Player {
     Player(Player &&) = default;
     Player &operator=(Player &&) = default;
 
-    InputBuffer<128> &get_input_buffer() { return inbuf; }
-    const InputBuffer<128> &get_input_buffer() const { return inbuf; }
-
     InputBuffer<128> inbuf;
     OutputBuffer outbuf;
     int fd;
+    std::array<std::string, 3> cards;
+    std::string name;
 };

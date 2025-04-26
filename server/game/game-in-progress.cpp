@@ -1,4 +1,3 @@
-#include <span>
 #include <socket-handling/fd-utils.hpp>
 #include <game/game-in-progress.hpp>
 
@@ -10,12 +9,10 @@ static void delete_bad_player(std::vector<Player> &players, Player &bad_player) 
 }
 
 bool GameInProgress::callback() {
-    std::array<epoll_event, 1> event_arr;
-    std::span<epoll_event> span(event_arr);
-    epoll_event ev = game.poll.wait(span, -1)[0];
+    epoll_event ev = game.wait_for_event(-1);
     Player &player_with_event = find_io(ev.data.fd);
     if (ev.events & EPOLLRDHUP || ev.events & EPOLLERR || ev.events & EPOLLHUP) {
-        delete_bad_player(game.players, player_with_event);
+        delete_bad_player(game.get_players(), player_with_event);
         send_err_msg("Another player unexpectedly closed their connection.");
         return false;
     }
@@ -29,7 +26,7 @@ bool GameInProgress::callback() {
             break;
         case SocketStatus::Error:
         case SocketStatus::ZeroReturned:
-            delete_bad_player(game.players, player_with_event);
+            delete_bad_player(game.get_players(), player_with_event);
             send_err_msg("Another player unexpectedly closed their connection.");
             return false;
         }

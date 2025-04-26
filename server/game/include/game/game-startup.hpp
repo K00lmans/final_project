@@ -23,9 +23,12 @@ class GameStartup {
     };
 
     StartState try_ready_game();
-    int get_fd() const { return game.poll.fd(); }
+    int get_fd() const { return game.get_fd(); }
     std::optional<StartState> add_user(int fd);
-    std::size_t size() const { return game.players.size(); }
+    std::size_t size() const { return game.get_players().size(); }
+    void get_gamedata(GameData &data) {
+        data = std::move(game);
+    }
     private:
     StartState process_in_event(Player &player);
     StartState process_out_event(Player &player);

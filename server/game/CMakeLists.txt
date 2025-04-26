@@ -13,6 +13,7 @@ add_library(game-serverside STATIC
     # implementation files
     game-in-progress.cpp
     game-startup.cpp
+    game-data.cpp
 )
 target_include_directories(game-serverside PUBLIC include)
 
