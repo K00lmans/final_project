@@ -62,7 +62,7 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown_sock(int fd, OutputBuffer
         case SocketStatus::Blocked:
             if (sock.outbuf.empty()) {
                 ev.events = EPOLLRDHUP | EPOLLET;
-                std::cout << "Called shutdown on fd." << std::endl;
+                std::cerr << "Called shutdown on fd." << std::endl;
                 shutdown(fd, SHUT_WR);
             }
             sock.timer.set(CLOSE_TIME_MS);
@@ -119,7 +119,7 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::callback() {
                 temp_ev.events = EPOLLRDHUP | EPOLLET;
                 temp_ev.data.fd = ev.data.fd;
                 poll.ctl(EPOLL_CTL_MOD, ev.data.fd, temp_ev);
-                std::cout << "Called shutdown() on fd" << std::endl;
+                std::cerr << "Called shutdown() on fd" << std::endl;
                 shutdown(ev.data.fd, SHUT_WR);
             }
             break;

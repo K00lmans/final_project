@@ -81,7 +81,7 @@ std::optional<int> ConnectionFactory::get_new_connection() {
             std::cerr << "Error accepting connection: " << strerror(errno) << std::endl;
             return std::optional<int>(std::nullopt);
         }
-        std::cout << errno;
+        std::cerr << errno;
         throw std::system_error(errno, std::generic_category(), "Call to accept() failed fatally.");
     }
     if (fcntl(new_fd, F_SETFL, O_NONBLOCK) == -1) {

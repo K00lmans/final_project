@@ -4,6 +4,10 @@
 #include <socket-handling/fd-poll.hpp>
 #include <socket-handling/fd-utils.hpp>
 
+#include <execinfo.h>
+#include <iostream>
+#include <cstdio>
+
 //
 // Maintainer: Athena Boose
 //
@@ -45,6 +49,7 @@ FdPoll &FdPoll::operator=(FdPoll &&poll) {
 void FdPoll::ctl(int op, int fd, epoll_event &event) {
     errno = 0;
     if (epoll_ctl(epfd, op, fd, &event) == -1) {
+        std::cerr << fd << std::endl;
         throw std::system_error(errno, std::generic_category(), "Could not run epoll_ctl on epoll instance.");
     }
 }

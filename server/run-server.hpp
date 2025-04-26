@@ -45,9 +45,6 @@ void run_server(const std::string &port, rlim_t fd_limit) {
     ev.data.fd = pending_game.get_fd();
     poll.ctl(EPOLL_CTL_ADD, pending_game.get_fd(), ev);
 
-    ev.data.fd = STDIN_FILENO;
-    poll.ctl(EPOLL_CTL_ADD, STDIN_FILENO, ev);
-
     rlimit lim;
     if (getrlimit(RLIMIT_NOFILE, &lim) == -1) {
         throw std::system_error(errno, std::generic_category(), "Failed to get current RLIMIT_NOFILE settings.");
@@ -59,9 +56,6 @@ void run_server(const std::string &port, rlim_t fd_limit) {
 
     for ever {
         auto update = poll.wait(span, -1);
-        if (update[0].data.fd == STDIN_FILENO) {
-            return; // exit upon input from stdin, this is partially for testing and partially because it's useful
-        }
 
         if (update[0].data.fd == shut->get_fd()) {
             shut->callback();

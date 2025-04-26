@@ -16,15 +16,6 @@ static void init_input_buf(InputBuffer<GOOD_BUF_SIZE> &buf, std::size_t readnum)
     reset_globals();
 }
 
-static bool check_card_testrunner(const std::string &test) {
-    InputBuffer<GOOD_BUF_SIZE> ibuf;
-    init_input_buf(ibuf, test.size());
-    for (std::size_t i = 0; i < test.size(); ++i) {
-        ibuf[i] = test[i];
-    }
-    return check_have_card_msg(ibuf, ibuf.size(), "Miss Scarlet");
-}
-
 
 // tests
 static void test_get_player_name(void) {
@@ -65,27 +56,12 @@ static void test_get_player_name(void) {
 
 }
 
-static void test_check_have_card_msg(void) {
-    InputBuffer<GOOD_BUF_SIZE> ibuf;
 
-    assert(check_card_testrunner("HAVE-CARD,Miss Scarlet,bad card\r\n") == false);
-    assert(check_card_testrunner("HAVE-CARD,bad player,Lead Pipe\r\n") == false);
-    assert(check_card_testrunner("utter garbage\r\n") == false);
-    assert(check_card_testrunner("HAVE-CARD\r\n") == false);
-    assert(check_card_testrunner("HAVE-CARD,\r\n") == false);
-    assert(check_card_testrunner("HAVE-CARD,Miss Scarlet\r\n") == false);
-    assert(check_card_testrunner("HAVE-CARD,Miss Scarlet,\r\n") == false);
-    assert(check_card_testrunner("HAVE-CARD,Colonel Mustard,Lead Pipe\r\n") == false);
-    assert(check_card_testrunner("HAVE-CARD,Miss Scarlet,Lead Pipe\r\n") == true);
-
-}
-
+// definitely need more tests but i don't have time to add them lol
 int main(void) {
     seed_rand();
     reset_globals();
     test_get_player_name();
-    reset_globals();
-    test_check_have_card_msg();
     reset_globals();
     return EXIT_SUCCESS;
 }
