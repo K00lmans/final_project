@@ -22,18 +22,17 @@ bool get_player_name(const InputBuffer<BUF_SIZE> &msg_string, std::size_t msg_le
     }
     std::string name;
     for (std::size_t i = PLAYER_SELECT.size(); i < msg_len - 2; ++i) {
-        out_string.push_back(msg_string[i]);
         name.push_back(msg_string[i]);
     }
     if (!cards::suspects_set.contains(name)) {
         return false; // didn't enter a valid player
     }
-
+    out_string += name;
     return true;
 }
 
 template <std::size_t BUF_SIZE>
-bool check_have_card_msg(const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_len) {
+bool check_have_card_msg(const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_len, const std::string &playername) {
     static const std::string HAVE_CARD("HAVE-CARD,");
     if (
         HAVE_CARD.size() >= (msg_len - 2) || 
@@ -57,7 +56,7 @@ bool check_have_card_msg(const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_le
         }
 
         if (msgbuf[i] == ',') {
-            if (cards::suspects_set.contains(str)) {
+            if (str == playername) {
                 break;
             }
             else {
@@ -68,10 +67,10 @@ bool check_have_card_msg(const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_le
     }
 
     str.clear();
-    for (; i < msg_len - 2; ++i) {
+    for (++i; i < msg_len - 2; ++i) {
         str.push_back(msgbuf[i]);
     }
-    if (cards::suspects_set.contains(str)) {
+    if (cards::cards_set.contains(str)) {
         return true;
     }
     else {
