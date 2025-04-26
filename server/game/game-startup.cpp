@@ -8,11 +8,11 @@ GameStartup::GameStartup(std::shared_ptr<Shutdown<>> shutdown, std::mt19937 &ran
     std::shuffle(cards_list.begin(), cards_list.end(), randomizer);
 }
 
-GameStartup::StartState GameStartup::try_ready_game() {
+GameStartup::StartState GameStartup::ready_game() {
     if (size() == 0) {
         return NotReady;
     }
-    epoll_event event = game.wait_for_event(0);
+    epoll_event event = game.wait_for_event(-1);
     if (
         (event.events & EPOLLRDHUP) ||
         (event.events & EPOLLERR) ||

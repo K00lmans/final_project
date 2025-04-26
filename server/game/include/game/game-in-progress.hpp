@@ -17,6 +17,7 @@
 #include <socket-handling/shutdown.hpp>
 #include <string>
 #include <socket-handling/fd-poll.hpp>
+#include <game/game-startup.hpp>
 #include "player.hpp"
 #include "game-data.hpp"
 
@@ -33,6 +34,8 @@ class GameInProgress {
 
     GameInProgress(GameInProgress &&) = default;
     GameInProgress &operator=(GameInProgress &&) = default;
+
+    GameInProgress(GameStartup &&startup) : game(std::move(startup.get_gamedata())) {}
 
     // returns true if you need to keep calling back, false if not
     bool callback();
@@ -56,6 +59,6 @@ class GameInProgress {
         }
     }
 
-    std::size_t turn_index = 0;
     GameData game;
+    std::size_t turn_index = 0;
 };

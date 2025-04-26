@@ -19,8 +19,6 @@ void kill_sock(int sock, FdPoll &poll, Shutdown<> &shut, std::unordered_map<int,
     fdmap.erase(sock);
 }
 
-void renew_game(GameStartup &pending_game, std::shared_ptr<Shutdown<>> shut, std::mt19937 &randomizer, FdPoll &poll);
-
 void handle_gamestartup(GameStartup::StartState state, GameStartup &pending_game, std::shared_ptr<Shutdown<>> shut, std::mt19937 &randomizer, FdPoll &poll);
 
 // there's not really a good way to make this cleaner, the final event loop's just gonna be large, complicated, and annoying as hell
@@ -78,12 +76,15 @@ void run_server(const std::string &port, rlim_t fd_limit) {
                 handle_gamestartup(game_result.value(), pending_game, shut, randomizer, poll);
             }
             else {
+                // game is full
                 // ACTUALLY START THE GAME
-                renew_game(pending_game, shut, randomizer, poll);
+
+                // temporary!!!!!!!!!!
+                pending_game.clear();
             }
         }
         else if (update[0].data.fd == pending_game.get_fd()) {
-            handle_gamestartup(pending_game.try_ready_game(), pending_game, shut, randomizer, poll);
+            handle_gamestartup(pending_game.ready_game(), pending_game, shut, randomizer, poll);
         }
         else {
             throw std::runtime_error("idk something went wrong");

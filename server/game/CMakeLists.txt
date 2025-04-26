@@ -27,3 +27,6 @@ target_link_libraries(private-game-utils PUBLIC socket-handling)
 
 target_link_libraries(game-serverside PRIVATE private-game-utils)
 target_link_libraries(game-serverside PUBLIC socket-handling)
+
+
+add_subdirectory(tests)

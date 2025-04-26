@@ -4,8 +4,6 @@
 #include <climits>
 #include <socket-handling/fd-utils.hpp>
 
-#include <iostream> // debugging
-
 // 
 // Maintainer: Athena Boose <pestpestthechicken@yahoo.com>
 // 

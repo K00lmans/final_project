@@ -22,12 +22,16 @@ class GameStartup {
         Error,
     };
 
-    StartState try_ready_game();
+    StartState ready_game();
     int get_fd() const { return game.get_fd(); }
     std::optional<StartState> add_user(int fd);
     std::size_t size() const { return game.get_players().size(); }
-    void get_gamedata(GameData &data) {
-        data = std::move(game);
+    GameData &get_gamedata() { return game; }
+    void clear() {
+        game.clear();
+        picked_players_message = "PLAYERS-TAKEN\r\n";
+        current_index = std::optional<std::size_t>(std::nullopt);
+        current_card = 0;
     }
     private:
     StartState process_in_event(Player &player);
