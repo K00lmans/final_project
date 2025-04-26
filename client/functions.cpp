@@ -26,7 +26,7 @@ void pick_characters(Player* player_list[6]) {
                 for (int button = 0; button < 6; button++) {
                     if (player_list[button] == nullptr && selection_boxes[button].second.getGlobalBounds().contains(
                         static_cast<sf::Vector2<float>>(mouse->position))) {
-                        player_list[button] = new Player(tokens[button], starting_positions[button]);
+                        player_list[button] = new Player(tokens[button], starting_positions[button], true);
                     }
                 }
                 if (selection_boxes[6].second.getGlobalBounds().contains(static_cast<sf::Vector2<float>>(mouse->position))) {
@@ -50,6 +50,13 @@ void pick_characters(Player* player_list[6]) {
             }
         }
         selection_window.display();
+    }
+
+    // Fills in the non-playing characters
+    for (int character = 0; character < 6; character++) {
+        if (player_list[character] == nullptr) {
+            player_list[character] = new Player(tokens[character], starting_positions[character], false);
+        }
     }
 }
 

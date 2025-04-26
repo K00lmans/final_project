@@ -44,6 +44,7 @@ inline Tile starting_positions[6] = {Tile(23, 7), Tile(16, 0), Tile(0, 5),
     Tile(9, 24), Tile(14, 24), Tile(0, 18)};
 inline auto rng_device = std::mt19937(std::random_device()());
 inline double square_size = 42;
+inline double upper_board_corner[2] = {75.5, 52};
 
 unsigned int get_window_x_size();
 
@@ -61,6 +62,15 @@ int generate_random_int(T min, T max) {
 template<typename T>
 double generate_random_double(T min, T max) {
     return std::uniform_real_distribution<std::mt19937::result_type>(min, max)(rng_device);
+}
+
+// This is such a cursed function
+inline auto get_player_textures() {
+    return std::vector({sf::Texture("client/graphics/colonel_mustard.jpg"),
+        sf::Texture("client/graphics/miss_scarlet.jpg"),
+        sf::Texture("client/graphics/professor_plum.jpg"),
+        sf::Texture("client/graphics/mr_green.jpg"), sf::Texture("client/graphics/mrs_white.jpg"),
+        sf::Texture("client/graphics/mrs_peacock.jpg")});
 }
 
 #endif //MAIN_H

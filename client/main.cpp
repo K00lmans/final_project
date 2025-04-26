@@ -44,6 +44,23 @@ int main() {
     background_image.setSmooth(true); // Can cause weird issues but should be fine since it is the background
     const auto background = sf::Sprite(background_image);
 
+    auto character_textures = get_player_textures();
+    const auto empty_texture = sf::Texture("client/graphics/blank.png");
+    sf::Sprite *board_squares[24][25];
+    for (int x = 0; x < 24; x++) {
+        for (int y = 0; y < 25; y++) {
+            board_squares[x][y] = new sf::Sprite(empty_texture);
+            board_squares[x][y]->setScale({static_cast<float>(square_size /
+                board_squares[x][y]->getGlobalBounds().size.x), static_cast<float>(square_size /
+                    board_squares[x][y]->getGlobalBounds().size.y)});
+            board_squares[x][y]->setPosition({static_cast<float>(upper_board_corner[0] + x * square_size),
+                static_cast<float>(upper_board_corner[1] + y * square_size)});
+        }
+    }
+    for (int player = 0; player < 6; player++) {
+        board_squares[players[player]->position.getX()][players[player]->position.getY()]->setTexture(character_textures[player]);
+    }
+
     Scratch_Pad::clear_data(); // Emptys old data
     auto current_users_pad = std::make_unique<Scratch_Pad>(screen_size, current_player + 1);
 
@@ -58,14 +75,25 @@ int main() {
 
         main_game_window.clear();
         main_game_window.draw(background);
+        for (auto &rows: board_squares) {
+            for (auto &squares: rows) {
+                main_game_window.draw(*squares);
+            }
+        }
         main_game_window.display();
         if (current_users_pad != nullptr) {
             current_users_pad->update();
         }
     }
 
+    // Memory cleaning
     for (auto &player : players) {
         delete player;
+    }
+    for (auto &rows: board_squares) {
+        for (auto &squares: rows) {
+            delete squares;
+        }
     }
     return 0;
 }
