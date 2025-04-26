@@ -30,15 +30,20 @@ int main() {
     int current_player = generate_random_int(0, 5); // Picks the starting player
 
     // Window setup
-    auto main_game_window = sf::RenderWindow(sf::VideoMode({get_window_x_size(),
-        static_cast<unsigned>(screen_size.y * window_scaler)}), "Clue", sf::Style::Close);
+    // Creates the window with the size of the image, this makes the world coordinates of the window line of with the
+    // pixels of the image for easy referencing
+    auto main_game_window = sf::RenderWindow(sf::VideoMode({static_cast<unsigned>(background_size[0]),
+        static_cast<unsigned>(background_size[1])}), "Clue", sf::Style::Close);
+    // Then resizes the window dynamically to fit on the screen of the user
+    main_game_window.setSize({get_window_x_size(), static_cast<unsigned>(screen_size.y * window_scaler)});
+    // Then, since that may move the window off the screen, move it back to the center of the screen
+    main_game_window.setPosition({static_cast<int>(screen_size.x / 2 - main_game_window.getSize().x / 2),
+        static_cast<int>(screen_size.y / 2 - main_game_window.getSize().y / 2)});
+
     auto background_image = sf::Texture("client/graphics/clue_board.jpg");
-    background_image.setSmooth(true); // Should be fine since it is the background
-    auto background = sf::Sprite(background_image);
-    background.setScale({
-        static_cast<float>(get_window_x_size() / background_size[0]),
-        static_cast<float>(screen_size.y * window_scaler / background_size[1])
-    });
+    background_image.setSmooth(true); // Can cause weird issues but should be fine since it is the background
+    const auto background = sf::Sprite(background_image);
+
     Scratch_Pad::clear_data(); // Emptys old data
     auto current_users_pad = std::make_unique<Scratch_Pad>(screen_size, current_player + 1);
 
