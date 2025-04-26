@@ -37,6 +37,14 @@ class GameStartup {
     StartState process_in_event(Player &player);
     StartState process_out_event(Player &player);
     StartState initialize_new_player(Player &player);
+    void add_player_cards() {
+        const std::size_t gamesize = game.get_players().size();
+        for (std::size_t i = 0; i < cards_list.size(); ++i) {
+            std::size_t index = gamesize - (i % gamesize) - 1;
+            game.get_players()[index].cards.push_back(cards_list[i]);
+        }
+    }
+    bool flush_player_cards();
 
     GameData game;
     std::string picked_players_message{"PLAYERS-TAKEN\r\n"};

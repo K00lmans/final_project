@@ -7,6 +7,7 @@
 //              This is a struct rather than a class since it's mainly intended to hold a bit of data.
 //
 
+#include <vector>
 #include <string>
 #include <socket-handling/input-buffer.hpp>
 #include <socket-handling/output-buffer.hpp>
@@ -24,6 +25,6 @@ struct Player {
     InputBuffer<128> inbuf;
     OutputBuffer outbuf;
     int fd;
-    std::array<std::string, 3> cards;
+    std::vector<std::string> cards;
     std::string name;
 };

@@ -78,6 +78,8 @@ GameStartup::StartState GameStartup::process_in_event(Player &player) {
         if (current_index.value() == game.get_players().size() - 1) {
             current_index = std::optional<std::size_t>(std::nullopt);
             if (game.get_players().size() >= 3) {
+                add_player_cards();
+                flush_player_cards();
                 return Ready;
             }
             else {
@@ -114,14 +116,7 @@ GameStartup::StartState GameStartup::process_out_event(Player &player) {
 
 GameStartup::StartState GameStartup::initialize_new_player(Player &player) {
     epoll_event ev { .events = EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLET, .data = {.fd = player.fd}};
-    player.outbuf.add_message(
-        std::shared_ptr<std::string>(new std::string(
-            picked_players_message + "PLAYER-CARDS," + cards_list[current_card] + "," + cards_list[current_card + 1] + "," + cards_list[current_card + 2] + "\r\n"
-        ))
-    );
-    for (int i = 0; i < 3; ++i) {
-        player.cards[i] = cards_list[current_card++];
-    }
+    player.outbuf.add_message(std::shared_ptr<std::string>(new std::string(picked_players_message)));
     switch (player.outbuf.flush(player.fd)) {
     case SocketStatus::ZeroReturned:
     case SocketStatus::Error:
@@ -137,3 +132,23 @@ GameStartup::StartState GameStartup::initialize_new_player(Player &player) {
     return Error;
 }
 
+bool GameStartup::flush_player_cards() {
+    for (Player &player : game.get_players()) {
+        std::string outstr("PLAYER-CARDS,");
+        for (const std::string &card : player.cards) {
+            outstr += card;
+            outstr += ',';
+        }
+        outstr.pop_back();
+        outstr += "\r\n";
+        player.outbuf.add_message(std::shared_ptr<std::string>(new std::string(outstr)));
+        switch (player.outbuf.flush(player.fd)) {
+        case SocketStatus::Error:
+        case SocketStatus::ZeroReturned:
+            return false;
+        default:
+            break;
+        }
+    }
+    return true;
+}
