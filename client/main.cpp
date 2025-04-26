@@ -25,7 +25,7 @@ int main() {
 
     // Game setup
     Board clue_board = getBoardFromFile(); // Can this not just be a constructor? -Kodiak
-    Player *players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; // I have an irrational love of c arrays
+    unique_ptr<Player> players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; // I have an irrational love of c arrays
     pick_characters(players);
     int current_player = generate_random_int(0, 5); // Picks the starting player
 
@@ -44,12 +44,12 @@ int main() {
     background_image.setSmooth(true); // Can cause weird issues but should be fine since it is the background
     const auto background = sf::Sprite(background_image);
 
-    auto character_textures = get_player_textures();
-    const auto empty_texture = sf::Texture("client/graphics/blank.png");
-    sf::Sprite *board_squares[24][25];
+    const auto character_textures = get_player_textures();
+    const auto empty_texture = make_unique<sf::Texture>(sf::Texture("client/graphics/blank.png"));
+    std::unique_ptr<sf::Sprite> board_squares[24][25];
     for (int x = 0; x < 24; x++) {
         for (int y = 0; y < 25; y++) {
-            board_squares[x][y] = new sf::Sprite(empty_texture);
+            board_squares[x][y] = make_unique<sf::Sprite>(sf::Sprite(*empty_texture));
             board_squares[x][y]->setScale({static_cast<float>(square_size /
                 board_squares[x][y]->getGlobalBounds().size.x), static_cast<float>(square_size /
                     board_squares[x][y]->getGlobalBounds().size.y)});
@@ -58,11 +58,12 @@ int main() {
         }
     }
     for (int player = 0; player < 6; player++) {
-        board_squares[players[player]->position.getX()][players[player]->position.getY()]->setTexture(character_textures[player]);
+        board_squares[players[player]->position.getX()][players[player]->position.getY()]->setTexture(*character_textures[player]);
     }
 
     Scratch_Pad::clear_data(); // Emptys old data
     auto current_users_pad = std::make_unique<Scratch_Pad>(screen_size, current_player + 1);
+
 
     // Main game loop
     while (main_game_window.isOpen()) {
@@ -86,14 +87,5 @@ int main() {
         }
     }
 
-    // Memory cleaning
-    for (auto &player : players) {
-        delete player;
-    }
-    for (auto &rows: board_squares) {
-        for (auto &squares: rows) {
-            delete squares;
-        }
-    }
     return 0;
 }

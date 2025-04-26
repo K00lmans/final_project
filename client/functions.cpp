@@ -12,7 +12,7 @@ unsigned int get_window_x_size() {
     return static_cast<unsigned int>(screen_size.y * window_scaler * (background_size[0] / background_size[1]));
 }
 
-void pick_characters(Player* player_list[6]) {
+void pick_characters(unique_ptr<Player> player_list[6]) {
     auto selection_window = sf::RenderWindow(sf::VideoMode({screen_size.x / 2, screen_size.y / 5}),
         "Character Selection", sf::Style::Close);
     const auto selection_boxes = create_buttons(create_standard_box());
@@ -26,7 +26,8 @@ void pick_characters(Player* player_list[6]) {
                 for (int button = 0; button < 6; button++) {
                     if (player_list[button] == nullptr && selection_boxes[button].second.getGlobalBounds().contains(
                         static_cast<sf::Vector2<float>>(mouse->position))) {
-                        player_list[button] = new Player(tokens[button], starting_positions[button], true);
+                        player_list[button] = make_unique<Player>(Player(tokens[button], starting_positions[button],
+                            true));
                     }
                 }
                 if (selection_boxes[6].second.getGlobalBounds().contains(static_cast<sf::Vector2<float>>(mouse->position))) {
@@ -55,21 +56,22 @@ void pick_characters(Player* player_list[6]) {
     // Fills in the non-playing characters
     for (int character = 0; character < 6; character++) {
         if (player_list[character] == nullptr) {
-            player_list[character] = new Player(tokens[character], starting_positions[character], false);
+            player_list[character] = make_unique<Player>(Player(tokens[character], starting_positions[character],
+                false));
         }
     }
 }
 
-sf::RectangleShape* create_standard_box() {
-    const auto standard = new sf::RectangleShape({static_cast<float>(screen_size.x / 12.0), // 1/6th the window width
-        static_cast<float>(screen_size.y / 10.0)}); // 1/2 the window height
+unique_ptr<sf::RectangleShape> create_standard_box() {
+    const auto standard = make_unique<sf::RectangleShape>(sf::RectangleShape({static_cast<float>(screen_size.x / 12.0), // 1/6th the window width
+        static_cast<float>(screen_size.y / 10.0)})); // 1/2 the window height
     standard->setOutlineThickness(screen_size.x / 360.0); // Should be three pixels on a 1080p screen
     standard->setOutlineColor(sf::Color::Black);
     standard->setFillColor(sf::Color(175, 175, 175));
-    return standard;
+    return make_unique<sf::RectangleShape>(*standard); // Smart pointers confuse me
 }
 
-std::vector<std::pair<sf::Text, sf::RectangleShape>> create_buttons(const sf::RectangleShape *standard) {
+std::vector<std::pair<sf::Text, sf::RectangleShape>> create_buttons(const unique_ptr<sf::RectangleShape> &standard) {
     const std::vector button_text = {"Colonel Mustard", "Miss Scarlet", "Professor Plum", "Mr. Green", "Mrs. White",
         "Mrs. Peacock", "Done"};
     std::vector<std::pair<sf::Text, sf::RectangleShape>> buttons;
@@ -92,7 +94,5 @@ std::vector<std::pair<sf::Text, sf::RectangleShape>> create_buttons(const sf::Re
     buttons[6].first.setPosition({static_cast<float>(screen_size.x / 4.0 -
         standard->getSize().x / 2), static_cast<float>(standard->getSize().y * 1.5 -
             buttons[6].first.getCharacterSize() / 1.5)});
-
-    delete standard; // Should probably be a smart pointer, but I'm not that smart so no smart pointer
     return buttons;
 }

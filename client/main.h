@@ -48,11 +48,11 @@ inline double upper_board_corner[2] = {75.5, 52};
 
 unsigned int get_window_x_size();
 
-void pick_characters(Player *player_list[6]);
+void pick_characters(unique_ptr<Player> player_list[6]);
 
-sf::RectangleShape* create_standard_box();
+unique_ptr<sf::RectangleShape> create_standard_box();
 
-std::vector<std::pair<sf::Text, sf::RectangleShape>> create_buttons(const sf::RectangleShape *standard);
+std::vector<std::pair<sf::Text, sf::RectangleShape>> create_buttons(const unique_ptr<sf::RectangleShape> &standard);
 
 template<typename T>
 int generate_random_int(T min, T max) {
@@ -66,11 +66,12 @@ double generate_random_double(T min, T max) {
 
 // This is such a cursed function
 inline auto get_player_textures() {
-    return std::vector({sf::Texture("client/graphics/colonel_mustard.jpg"),
-        sf::Texture("client/graphics/miss_scarlet.jpg"),
-        sf::Texture("client/graphics/professor_plum.jpg"),
-        sf::Texture("client/graphics/mr_green.jpg"), sf::Texture("client/graphics/mrs_white.jpg"),
-        sf::Texture("client/graphics/mrs_peacock.jpg")});
+    return std::vector({new sf::Texture("client/graphics/colonel_mustard.jpg"),
+        new sf::Texture("client/graphics/miss_scarlet.jpg"),
+        new sf::Texture("client/graphics/professor_plum.jpg"),
+        new sf::Texture("client/graphics/mr_green.jpg"),
+        new sf::Texture("client/graphics/mrs_white.jpg"),
+        new sf::Texture("client/graphics/mrs_peacock.jpg")});
 }
 
 #endif //MAIN_H
