@@ -51,11 +51,19 @@ class GameInProgress {
     void send_err_msg(const std::string &why) {
         broadcast("ERR," + why + "\r\n");
     }
-    void send_ending_msg() {
-        broadcast("GAME-END\r\n");
+    void send_ending_msg(const std::string &why) {
+        broadcast("GAME-END," + why + "\r\n");
     }
     bool other_player_msg(int fd);
+    bool current_player_msg();
+    std::optional<std::size_t> search_for_players() const;
+    bool handle_accuse(std::size_t msg_end);
 
     GameData game;
+    std::array<bool, 6> players_in_game{true, true, true, true, true, true};
     std::size_t turn_index = 0;
+    enum {
+        WaitingForCards,
+        WaitingForTurnEnd,
+    } turn_state;
 };

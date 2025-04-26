@@ -32,10 +32,9 @@ bool get_player_name(const InputBuffer<BUF_SIZE> &msg_string, std::size_t msg_le
 }
 
 template <std::size_t BUF_SIZE>
-bool check_have_card_msg(const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_len, const std::string &playername) {
-    static const std::string HAVE_CARD("HAVE-CARD,");
+bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_len, const std::string &playername) {
     if (
-        HAVE_CARD.size() >= (msg_len - 2) || 
+        header.size() >= (msg_len - 2) || 
         msgbuf.size() < msg_len ||
         msgbuf[msg_len - 1] != '\n' ||
         msgbuf[msg_len - 2] != '\r'
@@ -43,13 +42,13 @@ bool check_have_card_msg(const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_le
         return false;
     }
 
-    for (std::size_t i = 0; i < HAVE_CARD.size(); ++i) {
-        if (msgbuf[i] != HAVE_CARD[i]) {
+    for (std::size_t i = 0; i < header.size(); ++i) {
+        if (msgbuf[i] != header[i]) {
             return false;
         }
     }
     std::string str;
-    std::size_t i = HAVE_CARD.size();
+    std::size_t i = header.size();
     while (true) {
         if (i == (msg_len - 2)) {
             return false; // ran out of message
@@ -76,4 +75,27 @@ bool check_have_card_msg(const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_le
     else {
         return false;
     }
+}
+
+// presumes the message is a valid accuse-message
+template <std::size_t BUF_LEN>
+std::array<std::string, 3> parse_cards(const std::string &header, InputBuffer<BUF_LEN> &buf, std::size_t msg_len) {
+    std::size_t i = header.size();
+    std::array<std::string, 3> result;
+    while (buf[i++] != ',') {} // skipping player message
+
+    while (buf[i] != ',') {
+        result[0].push_back(buf[i++]);
+    }
+    ++i;
+
+    while (buf[i] != ',') {
+        result[1].push_back(buf[i++]);
+    }
+    ++i;
+
+    while (buf[i] != '\r') {
+        result[2].push_back(buf[i++]);
+    }
+    return result;
 }

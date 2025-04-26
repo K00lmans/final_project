@@ -1,16 +1,51 @@
 #include <socket-handling/fd-utils.hpp>
 #include <game/game-in-progress.hpp>
+#include <algorithm>
 #include "parsing.hpp"
 
 
-const std::string CONN_ERR("Another player encountered a connection error.");
-const std::string INTERNAL_ERR("An unexpected server error occurred.");
+static const std::string CONN_ERR("Another player encountered a connection error.");
+static const std::string INTERNAL_ERR("An unexpected server error occurred.");
+static const std::string MSG_ERR("Another player sent an invalid message.");
 
 
-// Generally I try to make my early returns a bit more sensible than this
-// However, this logic was (a) very nested and (b) makes the most sense when put in a linear fashion, not broken up into functions
+// This logic is kinda a dumpster fire tbh
+// There's so many error conditions that excessive early returns are the only option if I don't want extreme nesting
+// either way the code is unreadable lol
 //
-// so many error conditions ;-;
+// good luck reading this lol
+
+bool GameInProgress::callback() {
+    epoll_event ev = game.wait_for_event(-1);
+    Player &player_with_event = find_io(ev.data.fd);
+    if ((ev.events & EPOLLRDHUP) || (ev.events & EPOLLERR) || (ev.events & EPOLLHUP)) {
+        send_err_msg(CONN_ERR);
+        return false;
+    }
+    if (ev.events & EPOLLOUT) {
+        SocketStatus result(player_with_event.outbuf.flush(player_with_event.fd));
+        switch (result) {
+        case SocketStatus::Finished:
+        case SocketStatus::Blocked:
+            return true;
+        case SocketStatus::Error:
+        case SocketStatus::ZeroReturned:
+            send_err_msg(CONN_ERR);
+            return false;
+        }
+    }
+
+    if (!(ev.events & EPOLLIN)) {
+        send_err_msg(INTERNAL_ERR);
+        return false; // epoll returned something weird, just close everything
+    }
+
+    if (ev.data.fd == game.get_players()[turn_index].fd) {
+    }
+    else {
+        return other_player_msg(ev.data.fd);
+    }
+}
 
 void GameInProgress::broadcast(const std::string &message) {
     std::shared_ptr<std::string> msg(new std::string(message));
@@ -48,7 +83,7 @@ bool GameInProgress::other_player_msg(int fd) {
     std::optional<std::size_t> msg_end = player.inbuf.get_msg_end();
     if (!msg_end) {
         if (player.inbuf.full()) {
-            send_err_msg("Another player sent a message that was too long.");
+            send_err_msg(MSG_ERR);
             return false; // sent too many chars
         }
         else {
@@ -57,7 +92,7 @@ bool GameInProgress::other_player_msg(int fd) {
     }
 
     // now we have a valid message!
-    if (!check_have_card_msg(player.inbuf, msg_end.value(), player.name)) {
+    if (!check_cards_msg("HAVE-CARD,", player.inbuf, msg_end.value(), player.name)) {
         send_err_msg("Another player sent an invalid message.");
         return false;
     }
@@ -70,35 +105,70 @@ bool GameInProgress::other_player_msg(int fd) {
     return flush_out();
 }
 
-
-bool GameInProgress::callback() {
-    epoll_event ev = game.wait_for_event(-1);
-    Player &player_with_event = find_io(ev.data.fd);
-    if ((ev.events & EPOLLRDHUP) || (ev.events & EPOLLERR) || (ev.events & EPOLLHUP)) {
+bool GameInProgress::current_player_msg() {  
+    Player &current = game.get_players()[turn_index];
+    switch (current.inbuf.buf_read(current.fd)) {
+    case SocketStatus::Error:
+    case SocketStatus::ZeroReturned:
         send_err_msg(CONN_ERR);
         return false;
+    case SocketStatus::Blocked:
+    case SocketStatus::Finished:
+        break;
     }
-    if (ev.events & EPOLLOUT) {
-        SocketStatus result(player_with_event.outbuf.flush(player_with_event.fd));
-        switch (result) {
-        case SocketStatus::Finished:
-        case SocketStatus::Blocked:
-            return true;
-        case SocketStatus::Error:
-        case SocketStatus::ZeroReturned:
-            send_err_msg(CONN_ERR);
+
+    std::optional<std::size_t> msg(current.inbuf.get_msg_end());
+    if (!msg.has_value()) {
+        return true; // message hasn't fully sent yet
+    }
+
+    // now we definitely have something to parse, what is it?
+
+    if (check_cards_msg("CARD-REQUEST,", current.inbuf, msg.value(), current.name) && turn_state == WaitingForCards) {
+        auto result = parse_cards("CARD-REQUEST,", current.inbuf, msg.value());
+    }
+    else if (check_cards_msg("ACCUSE,", current.inbuf, msg.value(), current.name)) {
+        if (!handle_accuse(msg.value())) {
+            send_err_msg(MSG_ERR);
             return false;
         }
     }
-
-    if (!(ev.events & EPOLLIN)) {
-        send_err_msg(INTERNAL_ERR);
-        return false; // epoll returned something weird, just close everything
-    }
-
-    if (ev.data.fd == game.get_players()[turn_index].fd) {
-    }
     else {
-        return other_player_msg(ev.data.fd);
+        send_err_msg(MSG_ERR);
+        return false;
     }
+    broadcast("TURN_START," + game.get_players()[turn_index].name + "\r\n");
+    return flush_out();
+};
+
+
+std::optional<std::size_t> GameInProgress::search_for_players() const {
+    for (std::size_t i = 0; i < game.get_players().size(); ++i) {
+        if (players_in_game[(i + turn_index) % game.get_players().size()]) {
+            return std::optional((i + turn_index) % game.get_players().size());
+        }
+    }
+    return std::optional<std::size_t>(std::nullopt);
+}
+bool GameInProgress::handle_accuse(std::size_t msg_end) {
+    Player &current = game.get_players()[turn_index];
+    auto result = parse_cards("ACCUSE,", current.inbuf, msg_end);
+    for (const std::string &card : result) {
+        if (!std::find(game.get_win_cards().begin(), game.get_win_cards().end(), card)) {
+            broadcast("ACCUSE-FAIL," + current.name + ',' + result[0] + ',' + result[1] + ',' + result[2] + "\r\n");
+            if (!flush_out()) {
+                send_err_msg(CONN_ERR);
+                return false;
+            }
+            players_in_game[turn_index] = false;
+            auto search_res(search_for_players());
+            if (!search_res.has_value()) {
+                send_ending_msg("All players have made a false accusation.");
+                return false;
+            }
+            turn_index = search_res.value();
+            break;
+        }
+    }
+    return true;
 }
