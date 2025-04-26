@@ -43,6 +43,7 @@ inline Token tokens[6] = {Token(TokenID::COL_MUSTARD), Token(TokenID::MS_SCARLET
 inline Tile starting_positions[6] = {Tile(23, 7), Tile(16, 0), Tile(0, 5),
     Tile(9, 24), Tile(14, 24), Tile(0, 18)};
 inline auto rng_device = std::mt19937(std::random_device()());
+inline double square_size = 42;
 
 unsigned int get_window_x_size();
 

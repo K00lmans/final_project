@@ -17,7 +17,7 @@ Player::Player(const Token& new_characterToken, const Tile& new_position)
 	: characterToken(new_characterToken), position(new_position) {}
 
 void Player::movePlayer(Board& gameBoard) {
-	vector<Tile> legalMoves = gameBoard.getLegalMoves(position);
+	const vector<Tile> legalMoves = gameBoard.getLegalMoves(position);
 	
 	cout << "Choose a move:" << endl;
 	for (int i = 0; i < legalMoves.size(); i++) {

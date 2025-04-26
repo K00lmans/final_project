@@ -40,7 +40,7 @@ int main() {
         static_cast<float>(screen_size.y * window_scaler / background_size[1])
     });
     Scratch_Pad::clear_data(); // Emptys old data
-    std::unique_ptr<Scratch_Pad> current_users_pad;
+    auto current_users_pad = std::make_unique<Scratch_Pad>(screen_size, current_player + 1);
 
     // Main game loop
     while (main_game_window.isOpen()) {

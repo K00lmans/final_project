@@ -6,7 +6,6 @@
 using namespace std;
 
 class Room {
-private:
 	string name;
 
 
@@ -19,7 +18,7 @@ private:
 	Tile table;
 public:
 	Room() = delete;
-	Room(string new_name);
+	explicit Room(const string &new_name);
 
 	void addBoundsRaw(const Tile& top_left, const Tile& top_right, const Tile& bottom_left, const Tile& bottom_right);
 	void addBoundsArray(const array<Tile, 4>& newBounds);
@@ -30,18 +29,18 @@ public:
 	void setChair(const Tile& new_chair);
 	void setTable(const Tile& new_table);
 
-	const string& getName() const;
+	[[nodiscard]] const string& getName() const;
 
-	const vector<array<Tile, 4>>& getBounds() const;
+	[[nodiscard]] const vector<array<Tile, 4>>& getBounds() const;
 
-	const vector<Tile>& getDoors() const;
-	const vector<Tile>& getExits() const;
+	[[nodiscard]] const vector<Tile>& getDoors() const;
+	[[nodiscard]] const vector<Tile>& getExits() const;
 
-	const Tile& getChair() const;
-	const Tile& getTable() const;
+	[[nodiscard]] const Tile& getChair() const;
+	[[nodiscard]] const Tile& getTable() const;
 
 
-	bool isTileInRoom(Tile tile) const; 
+	[[nodiscard]] bool isTileInRoom(Tile tile) const;
 };
 
 inline const string& Room::getName() const {

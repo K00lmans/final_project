@@ -26,15 +26,15 @@ public:
 	int* getBoard();
 	[[nodiscard]] int getValueAtTile(Tile tile) const;
 
-	void addRoom(Room newRoom);
+	void addRoom(const Room& newRoom);
 
 	[[nodiscard]] const vector<Room>& getRooms() const;
 
 	void placeToken(Token token, Tile tile);
 	void deleteToken(Token token, Tile tile);
-	void displayBoard();
+	void displayBoard() const;
 
-	vector<Tile> getLegalMoves(Tile startTile);
+	[[nodiscard]] vector<Tile> getLegalMoves(Tile startTile) const;
 };
 
 inline int* Board::getBoard() {
