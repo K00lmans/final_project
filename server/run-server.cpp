@@ -40,7 +40,9 @@ void GameHandler::run_event() {
         handle_gamestartup(pending_game.ready_game());
     }
     else if (running_games.contains(eventfd)) {
-        running_games.at(eventfd).callback();
+        if (!running_games.at(eventfd).callback()) {
+            running_games.erase(eventfd);
+        }
     }
     else {
         throw std::runtime_error("idk something went wrong");

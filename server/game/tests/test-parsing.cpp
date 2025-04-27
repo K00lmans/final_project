@@ -56,12 +56,31 @@ static void test_get_player_name(void) {
 
 }
 
+bool cards_check_testrunner(const std::string &msg, const std::string &playername) {
+    InputBuffer<GOOD_BUF_SIZE> buf;
+    init_input_buf(buf, msg.size());
+    for (std::size_t i = 0; i < msg.size(); ++i) {
+        buf[i] = msg[i];
+    }
+    return check_cards_msg("CARD-REQUEST,", buf, msg.size(), playername);
+}
+
+void test_check_cards_msg(void) {
+    assert(cards_check_testrunner("garbage header,Miss Scarlet,Mrs. White,Study,Rope\r\n", "Miss Scarlet") == false);
+    assert(cards_check_testrunner("CARD-REQUEST,Scarlet,Mrs. White,Study,Rope\r\n", "Miss Scarlet") == false);
+    assert(cards_check_testrunner("CARD-REQUEST,Mr. Green,Mrs. White,Study,Rope\r\n", "Miss Scarlet") == false);
+    assert(cards_check_testrunner("CARD-REQUEST,Miss Scarlet,Mrs. White,Study\r\n", "Miss Scarlet") == false);
+    assert(cards_check_testrunner("CARD-REQUEST,Miss Scarlet,Mrs. White,Study,Rope\r\n", "Miss Scarlet") == true);
+}
+
 
 // definitely need more tests but i don't have time to add them lol
 int main(void) {
     seed_rand();
     reset_globals();
     test_get_player_name();
+    reset_globals();
+    test_check_cards_msg();
     reset_globals();
     return EXIT_SUCCESS;
 }

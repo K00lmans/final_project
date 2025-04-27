@@ -65,16 +65,19 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
         str.push_back(msgbuf[i++]);
     }
 
-    str.clear();
-    for (++i; i < msg_len - 2; ++i) {
-        str.push_back(msgbuf[i]);
+    for (int j = 0; j < 3; ++j) {
+        str.clear();
+        for (++i; msgbuf[i] != ',' && msgbuf[i] != '\r'; ++i) {
+            if (i > msg_len - 2) {
+                return false;
+            }
+            str.push_back(msgbuf[i]);
+        }
+        if (!cards::cards_set.contains(str)) {
+            return false;
+        }
     }
-    if (cards::cards_set.contains(str)) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    return true;
 }
 
 // presumes the message is a valid accuse-message

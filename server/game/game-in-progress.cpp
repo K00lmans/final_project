@@ -4,14 +4,17 @@
 #include "parsing.hpp"
 
 
-static const std::string CONN_ERR("Another player encountered a connection error.");
+static const std::string CONN_ERR("A player encountered a connection error.");
 static const std::string INTERNAL_ERR("An unexpected server error occurred.");
-static const std::string MSG_ERR("Another player sent an invalid message.");
+static const std::string MSG_ERR("A player sent an invalid message.");
 
-std::optional<std::size_t> find_cardholder(const std::array<std::string, 3> &search_cards, const std::vector<Player> &players) {
+std::optional<std::size_t> find_cardholder(const std::array<std::string, 3> &search_cards, const std::vector<Player> &players, std::size_t current_player_index) {
     for (const std::string &card : search_cards) {
         for (std::size_t i = 0; i < players.size(); ++i) {
-            if (std::find(players[i].cards.begin(), players[i].cards.end(), card) != players[i].cards.end()) {
+            if (
+                i != current_player_index && 
+                (std::find(players[i].cards.begin(), players[i].cards.end(), card) != players[i].cards.end())
+            ) {
                 return std::optional(i);
             }
         }
@@ -44,7 +47,16 @@ bool check_endturn_msg(const InputBuffer<BUF_SIZE> &buf, std::size_t msg_len) {
 
 
 GameInProgress::GameInProgress(GameStartup &&startup) : game(std::move(startup.get_gamedata())) {
-    broadcast("TURN-START," + game.get_players()[0].name + "\r\n");
+    epoll_event ev { .events = EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLET, .data = { .fd = -1 } };
+    for (Player &player : game.get_players()) {
+        ev.data.fd = player.fd;
+        game.mod_poll_fd(player.fd, ev);
+    }
+    std::string playerlist{"PLAYERS-LIST,"};
+    for (Player &player : game.get_players()) {
+        playerlist += player.name + ',';
+    }
+    broadcast(playerlist + "\r\nTURN-START," + game.get_players()[0].name + "\r\n");
     is_valid = flush_out();
     if (!is_valid) {
         send_err_msg(CONN_ERR);
@@ -52,36 +64,40 @@ GameInProgress::GameInProgress(GameStartup &&startup) : game(std::move(startup.g
 }
 
 bool GameInProgress::callback() {
+    std::cerr << "woo callback" << std::endl;
     epoll_event ev = game.wait_for_event(-1);
     Player &player_with_event = find_io(ev.data.fd);
     if ((ev.events & EPOLLRDHUP) || (ev.events & EPOLLERR) || (ev.events & EPOLLHUP)) {
+        std::cerr << "wtf error" << std::endl;
         send_err_msg(CONN_ERR);
         return false;
     }
     if (ev.events & EPOLLOUT) {
         SocketStatus result(player_with_event.outbuf.flush(player_with_event.fd));
+        std::cerr << "wtf" << std::endl;
         switch (result) {
         case SocketStatus::Finished:
         case SocketStatus::Blocked:
-            return true;
+            break;
         case SocketStatus::Error:
         case SocketStatus::ZeroReturned:
+        std::cerr << "wtf error" << std::endl;
             send_err_msg(CONN_ERR);
             return false;
         }
     }
 
-    if (!(ev.events & EPOLLIN)) {
-        send_err_msg(INTERNAL_ERR);
-        return false; // epoll returned something weird, just close everything
-    }
+    if (ev.events & EPOLLIN) {
+        std::cerr << "does it get here" << std::endl;
 
-    if (ev.data.fd == game.get_players()[turn_index].fd) {
-        return current_player_msg();
+        if (ev.data.fd == game.get_players()[turn_index].fd) {
+            return current_player_msg();
+        }
+        else {
+            return other_player_msg(ev.data.fd);
+        }
     }
-    else {
-        return other_player_msg(ev.data.fd);
-    }
+    return true;
 }
 
 void GameInProgress::broadcast(const std::string &message) {
@@ -130,7 +146,7 @@ bool GameInProgress::other_player_msg(int fd) {
 
     // now we have a valid message!
     if (!check_cards_msg("HAVE-CARD,", player.inbuf, msg_end.value(), player.name)) {
-        send_err_msg("Another player sent an invalid message.");
+        send_err_msg(MSG_ERR);
         return false;
     }
     // now we can just send this message to every player
@@ -143,6 +159,7 @@ bool GameInProgress::other_player_msg(int fd) {
 }
 
 bool GameInProgress::current_player_msg() {  
+    std::cerr << "asdf" << std::endl;
     Player &current = game.get_players()[turn_index];
     switch (current.inbuf.buf_read(current.fd)) {
     case SocketStatus::Error:
@@ -160,12 +177,16 @@ bool GameInProgress::current_player_msg() {
     }
 
     // now we definitely have something to parse, what is it?
+    //
+
+    // bug, never gets here. why?
+    std::cerr << "pian" << std::endl;
 
     if (check_cards_msg("CARD-REQUEST,", current.inbuf, msg.value(), current.name) && turn_state == WaitingForCards) {
         turn_state = WaitingForTurnEnd;
         auto result = parse_cards("CARD-REQUEST,", current.inbuf, msg.value());
         current.inbuf.pop_front(msg.value());
-        auto index = find_cardholder(result, game.get_players());
+        auto index = find_cardholder(result, game.get_players(), turn_index);
         std::string card_str(result[0] + ',' + result[1] + ',' + result[2]);
         if (!index.has_value()) {
             // player guessed the right cards
