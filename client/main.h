@@ -74,4 +74,16 @@ bool check_if_in_vector(const std::vector<T> &vector, const T &element) {
 
 void change_sprite_texture(sf::Sprite &sprite, const sf::Texture &new_texture);
 
+// The way to remove an item from a vector by default is kinda weird, so here is this function instead
+template<class T>
+void remove_item_from_vector(std::vector<T> &vector, const T &element) {
+    std::vector<T> new_vector;
+    for (const auto &item : vector) {
+        if (item != element) {
+            new_vector.push_back(item);
+        }
+    }
+    vector = new_vector;
+}
+
 #endif //MAIN_H

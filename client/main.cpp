@@ -76,8 +76,8 @@ int main() {
 
 
     // Main game loop
-    while (main_game_window.isOpen()) {
     std::vector<Tile> tiles_in_reach; // Created here for use in full main game loop scope
+    while (main_game_window.isOpen()) {
 
         // Game maintenance
         if (!players[current_player]->playing) { // Skips over NPC's
@@ -99,6 +99,29 @@ int main() {
             if (event->is<sf::Event::Closed>()) {
                 current_users_pad.reset();
                 main_game_window.close();
+            } else if (const auto *mouse = event->getIf<sf::Event::MouseButtonPressed>()) {
+                for (const auto &tile: tiles_in_reach) {
+                    if (board_squares[tile.getX()][tile.getY()]->getGlobalBounds().contains(
+                        main_game_window.mapPixelToCoords(mouse->position))) {
+                        clue_board.deleteToken(players[current_player]->characterToken,
+                            players[current_player]->position);
+                        change_sprite_texture(*board_squares[players[current_player]->position.getX()]
+                            [players[current_player]->position.getY()], *empty_texture);
+                        players[current_player]->position = tile;
+                        // Add room code here
+                        change_sprite_texture(*board_squares[tile.getX()][tile.getY()],
+                            *character_textures[current_player]);
+                        remove_item_from_vector(tiles_in_reach, tile); // Sets up for next line
+                        for (const auto &unused_tile: tiles_in_reach) { // Resets textures
+                            change_sprite_texture(*board_squares[unused_tile.getX()][unused_tile.getY()],
+                                *empty_texture);
+                        }
+                        clue_board.placeToken(players[current_player]->characterToken,
+                            players[current_player]->position);
+                        current_player = (current_player + 1) % 6; // Advance to next turn
+                        break;
+                    }
+                }
             }
         }
 

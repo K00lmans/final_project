@@ -19,11 +19,16 @@ public:
 	void setY(int new_y);
 
 	bool operator==(const Tile& other) const;
+	bool operator!=(const Tile& other) const;
 	friend ostream& operator<<(ostream& os, const Tile& tile);
 };
 
 inline bool Tile::operator==(const Tile& other) const {
 	return this->x == other.x && this->y == other.y;
+}
+
+inline bool Tile::operator!=(const Tile& other) const {
+	return this->x != other.x || this->y != other.y;
 }
 
 inline int Tile::getX() const {
