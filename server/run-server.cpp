@@ -1,7 +1,53 @@
 #include "run-server.hpp"
 
 
-void handle_gamestartup(GameStartup::StartState state, GameStartup &pending_game, std::shared_ptr<Shutdown<>> shut, std::mt19937 &randomizer, FdPoll &poll) {
+GameHandler::GameHandler(const std::string &port_no) : connfact(port_no) {
+    epoll_event ev{.events = EPOLLIN | EPOLLERR, .data = {.fd = -1}};
+
+    ev.data.fd = connfact.get_fd();
+    poll.ctl(EPOLL_CTL_ADD, connfact.get_fd(), ev);
+
+    ev.data.fd = shut->get_fd();
+    poll.ctl(EPOLL_CTL_ADD, shut->get_fd(), ev);
+
+    ev.data.fd = pending_game.get_fd();
+    poll.ctl(EPOLL_CTL_ADD, pending_game.get_fd(), ev);
+}
+
+void GameHandler::run_event() {
+    int eventfd = get_event();
+    if (eventfd == shut->get_fd()) {
+        shut->callback();
+    }
+    else if (eventfd == connfact.get_fd()) {
+        auto result = connfact.get_new_connection();
+        if (!result.has_value()) {
+            return;
+        }
+        auto game_result = pending_game.add_user(result.value());
+        if (game_result.has_value()) {
+            handle_gamestartup(game_result.value());
+        }
+        else {
+            // the game is full, start it
+            handle_gamestartup(GameStartup::Ready);
+            // then add the user
+            handle_gamestartup(pending_game.add_user(result.value()).value());
+        }
+    }
+    else if (eventfd == pending_game.get_fd()) {
+        // make less shit
+        handle_gamestartup(pending_game.ready_game());
+    }
+    else if (running_games.contains(eventfd)) {
+        running_games.at(eventfd).callback();
+    }
+    else {
+        throw std::runtime_error("idk something went wrong");
+    }
+}
+
+void GameHandler::handle_gamestartup(GameStartup::StartState state) {
     epoll_event ev {};
     switch (state) {
     case GameStartup::NotReady:
@@ -12,8 +58,12 @@ void handle_gamestartup(GameStartup::StartState state, GameStartup &pending_game
         break;
     case GameStartup::Ready:
         std::cerr << "Game started successfully!" << std::endl;
-        // IMPLEMENT ACTUAL GAME CODE AND MOVE THE CORE OF THE GAME INTO THE NEW GAME THINGY
-        pending_game.clear();
+        int gamefd = pending_game.get_fd();
+        running_games.try_emplace(gamefd, std::move(pending_game));
+        if (!running_games.at(gamefd).check_validity()) {
+            running_games.erase(gamefd); // just get rid of the game if it had an error
+        }
+        pending_game = GameStartup(shut, randomizer);
         break;
     }
 }

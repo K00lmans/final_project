@@ -26,17 +26,32 @@ The code is mostly broken up into two subdirectories.
 `game` handles the actual game logic; or, at least, how the server manages receiving and sending messages.
 `socket-handling` provides convenience classes that handle things like creating new TCP connections, buffering input/output, polling file descriptors, setting timers, and shutting down connections cleanly.
 
+Many (if not all) of the classes here disallow copy construction/assignment explicitly.
+This is because (a) duplicating a socket doesn't make sense, and (b) I'd like to avoid accidentally copying buffers by forgetting to throw a std::move on them, especially since when the buffers are used they're paired with sockets and can't be copied anyways because of that.
+Some classes also disable default construction because, again, allowing default construction in some cases allows for invalid objects to be created, which seemed like a bad idea.
+
 Some things aren't designed the best - polling, especially.
 The `FdPoll` class is a *very* thin wrapper over `epoll` (and not even a good one, idk why I passed `epoll_event` in as a reference instead of a pointer, it's very inconvenient).
+
+Also, some of the game classes (like Player) are just structs with public fields, which isn't the best design.
+They were designed this way since the alternative is to effectively have a bunch of trivial getters returning references to fields.
+The fields of a player are themselves nicely encapsulated so I felt that it was still mostly sensible.
+The external interface of the Game classes also don't take any Player structs, so even though the Player structs are public they're practically still an implementation detail and not something future code would ever mess with.
 
 Furthermore, the buffers are probably a bit more inefficient than necessary.
 `read(2)` and `write(2)` only do partial reads/writes in situations where they will block on the next call (thus meaning that edge-triggered epoll will send another notification when they're available again).
 So, a few system calls could probably be avoided there with a quick refactor.
 
-Also, having separate returns for completed and blocked IO was kinda dumb in retrospect.
+Also, having separate enum values for completed and blocked IO was kinda dumb in retrospect.
 Either will reset epoll; there is literally no difference between the two for my usecases here.
 Same for passing `InputBuffer`s around instead of just having the get message function return a std::string.
 It sounded like a good idea when I was originally writing the lower-level network/buffer management code, but it wasn't one in practice.
+
+I guess generally, error handling here could be improved.
+Sockets have a lot of error states that are not really fatal to the application and might be expected to frequently occur, so I didn't feel exceptions were the right way to do error handling here (although they are used in cases of truly fatal errors).
+Monadic error handling (`std::expected`) would probably have been a good fit, but they're (a) a bit clunky and (b) not available everywhere yet.
+Also, they come with the downside of more copying in some cases, depending on what you're returning of course.
+I settled on return codes but they definitely have a lot of shortcomings, too.
 
 Finally, this code could probably be tested more rigorously than it currently is.
 There are some test cases (see the `game/tests` and `socket-handling/tests` directories), but network code is kinda just inherently hard to test.

@@ -40,6 +40,17 @@ bool check_endturn_msg(const InputBuffer<BUF_SIZE> &buf, std::size_t msg_len) {
 //
 // good luck reading this lol
 
+
+
+
+GameInProgress::GameInProgress(GameStartup &&startup) : game(std::move(startup.get_gamedata())) {
+    broadcast("TURN-START," + game.get_players()[0].name + "\r\n");
+    is_valid = flush_out();
+    if (!is_valid) {
+        send_err_msg(CONN_ERR);
+    }
+}
+
 bool GameInProgress::callback() {
     epoll_event ev = game.wait_for_event(-1);
     Player &player_with_event = find_io(ev.data.fd);

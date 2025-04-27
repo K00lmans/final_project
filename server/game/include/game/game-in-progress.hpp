@@ -11,7 +11,6 @@
 // NO_TESTS
 //
 
-#include <memory>
 #include <algorithm>
 #include <vector>
 #include <socket-handling/shutdown.hpp>
@@ -35,9 +34,8 @@ class GameInProgress {
     GameInProgress(GameInProgress &&) = default;
     GameInProgress &operator=(GameInProgress &&) = default;
 
-    GameInProgress(GameStartup &&startup) : game(std::move(startup.get_gamedata())) {
-        broadcast("TURN-START," + game.get_players()[0].name + "\r\n");
-    }
+    GameInProgress(GameStartup &&startup);
+    bool check_validity() const { return is_valid; }
 
     // returns true if you need to keep calling back, false if not
     bool callback();
@@ -64,6 +62,7 @@ class GameInProgress {
     GameData game;
     std::array<bool, 6> players_in_game{true, true, true, true, true, true};
     std::size_t turn_index = 0;
+    bool is_valid = true;
     enum {
         WaitingForCards,
         WaitingForTurnEnd,
