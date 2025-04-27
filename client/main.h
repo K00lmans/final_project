@@ -59,4 +59,19 @@ int generate_random_int(T min, T max) {
     return static_cast<int>(std::uniform_int_distribution<std::mt19937::result_type>(min, max)(rng_device));
 }
 
+std::vector<Tile> find_reachable_tiles(const Tile &position, int movement, const Board &board);
+
+// Returns true if the item is in the vector, false otherwise
+template<class T>
+bool check_if_in_vector(const std::vector<T> &vector, const T &element) {
+    for (auto &item : vector) {
+        if (item == element) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void change_sprite_texture(sf::Sprite &sprite, const sf::Texture &new_texture);
+
 #endif //MAIN_H

@@ -28,6 +28,7 @@ int main() {
     unique_ptr<Player> players[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; // I have an irrational love of c arrays
     pick_characters(players);
     int current_player = generate_random_int(0, 5); // Picks the starting player
+    int prior_player = -1;
 
     // Window setup
     // Creates the window with the size of the image, this makes the world coordinates of the window line of with the
@@ -53,6 +54,7 @@ int main() {
         make_unique<sf::Texture>(sf::Texture("client/graphics/mrs_white.jpg")),
         make_unique<sf::Texture>(sf::Texture("client/graphics/mrs_peacock.jpg"))};
     const auto empty_texture = make_unique<sf::Texture>(sf::Texture("client/graphics/blank.png"));
+    const auto selection_texture = make_unique<sf::Texture>(sf::Texture("client/graphics/selection.png"));
     std::unique_ptr<sf::Sprite> board_squares[24][25];
     for (int x = 0; x < 24; x++) {
         for (int y = 0; y < 25; y++) {
@@ -64,24 +66,35 @@ int main() {
                 static_cast<float>(upper_board_corner[1] + y * square_size)});
         }
     }
-    for (int player = 0; player < 6; player++) { // Every fiber of my being despises this loop
-        const auto original_size =
-            board_squares[players[player]->position.getX()][players[player]->position.getY()]->getTextureRect().size;
-        board_squares[players[player]->position.getX()][players[player]->position.getY()]->setTexture(
-            *character_textures[player], true);
-        const auto new_size =
-            board_squares[players[player]->position.getX()][players[player]->position.getY()]->getTextureRect().size;
-        board_squares[players[player]->position.getX()][players[player]->position.getY()]->scale(
-            {static_cast<float>(original_size.x / new_size.x), static_cast<float>(original_size.y /
-                new_size.y)});
+    for (int player = 0; player < 6; player++) {
+        change_sprite_texture(*board_squares[players[player]->position.getX()][players[player]->position.getY()],
+            *character_textures[player]);
     }
 
     Scratch_Pad::clear_data(); // Emptys old data
-    auto current_users_pad = std::make_unique<Scratch_Pad>(screen_size, current_player + 1);
+    unique_ptr<Scratch_Pad> current_users_pad;
 
 
     // Main game loop
     while (main_game_window.isOpen()) {
+    std::vector<Tile> tiles_in_reach; // Created here for use in full main game loop scope
+
+        // Game maintenance
+        if (!players[current_player]->playing) { // Skips over NPC's
+            current_player = (current_player + 1) % 6;
+        }
+        else if (current_player != prior_player) { // This means a new turn has rolled over
+            prior_player = current_player;
+            current_users_pad = make_unique<Scratch_Pad>(screen_size, current_player + 1);
+            // This is an incredibly expensive operation so it should be run as little as possible
+            tiles_in_reach = find_reachable_tiles(players[current_player]->position,
+                generate_random_int(1, 6), clue_board); // This has to be at least O(n^n)
+            for (const auto &tile: tiles_in_reach) {
+                change_sprite_texture(*board_squares[tile.getX()][tile.getY()], *selection_texture);
+            }
+        }
+
+        // Handle interactivity
         while (const std::optional event = main_game_window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 current_users_pad.reset();
@@ -89,6 +102,7 @@ int main() {
             }
         }
 
+        // Refresh and draw
         main_game_window.clear();
         main_game_window.draw(background);
         for (auto &rows: board_squares) {

@@ -4,16 +4,16 @@ using namespace std;
 
 Tile::Tile() : Tile(0, 0) {}
 
-Tile::Tile(int new_x, int new_y) {
+Tile::Tile(const int new_x, const int new_y) {
 	x = new_x;
 	y = new_y;
 }
 
-void Tile::setX(int new_x) {
+void Tile::setX(const int new_x) {
 	x = new_x;
 }
 
-void Tile::setY(int new_y) {
+void Tile::setY(const int new_y) {
 	y = new_y;
 }
 

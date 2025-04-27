@@ -96,3 +96,35 @@ std::vector<std::pair<sf::Text, sf::RectangleShape>> create_buttons(const unique
             buttons[6].first.getCharacterSize() / 1.5)});
     return buttons;
 }
+
+// Finds all tiles you can move to from a given position with a given amount of movement
+std::vector<Tile> find_reachable_tiles(const Tile &position, const int movement, const Board &board) {
+    std::vector<Tile> reachable_tiles;
+    if (movement == 0) {
+        return reachable_tiles;
+    }
+    const auto new_tiles = board.getLegalMoves(position);
+    for (const auto &tile : new_tiles) {
+        if (!check_if_in_vector(reachable_tiles, tile)) { // Prevents duplicate searching
+            for (const auto &new_tile: find_reachable_tiles(tile, movement - 1, board)) {
+                if (!check_if_in_vector(reachable_tiles, new_tile)) {
+                    reachable_tiles.emplace_back(new_tile);
+                }
+            }
+            reachable_tiles.emplace_back(tile);
+        }
+    }
+    return reachable_tiles;
+}
+
+// Since changing the texture on a sprite is such an involved process, here is a dedicated function for it
+void change_sprite_texture(sf::Sprite &sprite, const sf::Texture &new_texture) {
+    // Gets the original size for scaling
+    const auto original_size = static_cast<sf::Vector2<float>>(sprite.getTextureRect().size);
+    // Sets the new texture and rescales the TextureRect, but changes the size of the sprite
+    sprite.setTexture(new_texture, true);
+    // Gets the new size for scaling
+    const auto new_size = static_cast<sf::Vector2<float>>(sprite.getTextureRect().size);
+    // And finally use the old and new size to get the scaling factor to return it to the original size
+    sprite.scale({original_size.x / new_size.x, original_size.y / new_size.y});
+}
