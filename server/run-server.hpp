@@ -3,11 +3,14 @@
 #include <sys/resource.h>
 #include <string>
 #include <random>
+#include <unordered_map>
+
 #include <socket-handling/input-buffer.hpp>
 #include <socket-handling/fd-poll.hpp>
 #include <socket-handling/shutdown.hpp>
 #include <socket-handling/connection-factory.hpp>
 #include <game/game-startup.hpp>
+#include <game/game-in-progress.hpp>
 
 #define ever (;;) // this is funny so i did it
 
@@ -54,6 +57,8 @@ void run_server(const std::string &port, rlim_t fd_limit) {
         throw std::system_error(errno, std::generic_category(), "Failed to set RLIMIT_NOFILE to desired value.");
     }
 
+    std::unordered_map<int, GameInProgress> games_map;
+
     for ever {
         auto update = poll.wait(span, -1);
 
@@ -70,11 +75,8 @@ void run_server(const std::string &port, rlim_t fd_limit) {
                 handle_gamestartup(game_result.value(), pending_game, shut, randomizer, poll);
             }
             else {
-                // game is full
-                // ACTUALLY START THE GAME
-
-                // temporary!!!!!!!!!!
-                pending_game.clear();
+                int gamefd = pending_game.get_fd();
+                games_map.try_emplace(gamefd, std::move(pending_game));
             }
         }
         else if (update[0].data.fd == pending_game.get_fd()) {

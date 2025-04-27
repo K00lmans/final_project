@@ -8,6 +8,31 @@ static const std::string CONN_ERR("Another player encountered a connection error
 static const std::string INTERNAL_ERR("An unexpected server error occurred.");
 static const std::string MSG_ERR("Another player sent an invalid message.");
 
+std::optional<std::size_t> find_cardholder(const std::array<std::string, 3> &search_cards, const std::vector<Player> &players) {
+    for (const std::string &card : search_cards) {
+        for (std::size_t i = 0; i < players.size(); ++i) {
+            if (std::find(players[i].cards.begin(), players[i].cards.end(), card) != players[i].cards.end()) {
+                return std::optional(i);
+            }
+        }
+    }
+    return std::optional<std::size_t>(std::nullopt);
+}
+
+template <std::size_t BUF_SIZE>
+bool check_endturn_msg(const InputBuffer<BUF_SIZE> &buf, std::size_t msg_len) {
+    static const std::string END_TURN("END-TURN\r\n");
+    if (msg_len != END_TURN.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < msg_len; ++i) {
+        if (buf[i] != END_TURN[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 
 // This logic is kinda a dumpster fire tbh
 // There's so many error conditions that excessive early returns are the only option if I don't want extreme nesting
@@ -41,6 +66,7 @@ bool GameInProgress::callback() {
     }
 
     if (ev.data.fd == game.get_players()[turn_index].fd) {
+        return current_player_msg();
     }
     else {
         return other_player_msg(ev.data.fd);
@@ -125,19 +151,36 @@ bool GameInProgress::current_player_msg() {
     // now we definitely have something to parse, what is it?
 
     if (check_cards_msg("CARD-REQUEST,", current.inbuf, msg.value(), current.name) && turn_state == WaitingForCards) {
+        turn_state = WaitingForTurnEnd;
         auto result = parse_cards("CARD-REQUEST,", current.inbuf, msg.value());
+        current.inbuf.pop_front(msg.value());
+        auto index = find_cardholder(result, game.get_players());
+        std::string card_str(result[0] + ',' + result[1] + ',' + result[2]);
+        if (!index.has_value()) {
+            // player guessed the right cards
+            broadcast("CARD-REQUEST-EMPTY," + current.name + ',' + card_str + "\r\n");
+            return flush_out();
+        }
+        Player &found_player = game.get_players()[index.value()];
+        broadcast("CARD-REQUEST," + current.name + ',' + found_player.name + ',' + card_str + "\r\n");
+        return flush_out();
     }
     else if (check_cards_msg("ACCUSE,", current.inbuf, msg.value(), current.name)) {
         if (!handle_accuse(msg.value())) {
             send_err_msg(MSG_ERR);
             return false;
         }
+        current.inbuf.pop_front(msg.value()); // can technically return without popping inbuf, but those are error states and will be cleaned up
+    }
+    else if (check_endturn_msg(current.inbuf, msg.value())) {
+        current.inbuf.pop_front(msg.value());
+        // do nothing, let fall through to broadcast
     }
     else {
         send_err_msg(MSG_ERR);
         return false;
     }
-    broadcast("TURN_START," + game.get_players()[turn_index].name + "\r\n");
+    broadcast("TURN-START," + game.get_players()[turn_index].name + "\r\n");
     return flush_out();
 };
 

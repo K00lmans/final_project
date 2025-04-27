@@ -35,7 +35,9 @@ class GameInProgress {
     GameInProgress(GameInProgress &&) = default;
     GameInProgress &operator=(GameInProgress &&) = default;
 
-    GameInProgress(GameStartup &&startup) : game(std::move(startup.get_gamedata())) {}
+    GameInProgress(GameStartup &&startup) : game(std::move(startup.get_gamedata())) {
+        broadcast("TURN-START," + game.get_players()[0].name + "\r\n");
+    }
 
     // returns true if you need to keep calling back, false if not
     bool callback();
