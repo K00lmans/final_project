@@ -4,7 +4,7 @@
 
 - Athena Boose (lab section 09) [`<pestpestthechicken@yahoo.com>`](mailto:pestpestthechicken@yahoo.com)
 - Kodiak O'Masta (lab section 13) [`<meepsterIQ@yahoo.com>`](mailto:meepsterIQ@yahoo.com)
-- Ryan Gradinaru
+- Ryan Gradinaru (lab section 05)
 
 ## Build Instructions (Windows)
 
