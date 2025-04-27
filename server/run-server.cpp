@@ -36,7 +36,6 @@ void GameHandler::run_event() {
         }
     }
     else if (eventfd == pending_game.get_fd()) {
-        // make less shit
         handle_gamestartup(pending_game.ready_game());
     }
     else if (running_games.contains(eventfd)) {
@@ -65,7 +64,7 @@ void GameHandler::handle_gamestartup(GameStartup::StartState state) {
         if (!running_games.at(gamefd).check_validity()) {
             running_games.erase(gamefd); // just get rid of the game if it had an error
         }
-        pending_game = GameStartup(shut, randomizer);
+        pending_game = std::move(GameStartup(shut, randomizer));
         break;
     }
 }

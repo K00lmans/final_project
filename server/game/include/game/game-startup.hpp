@@ -2,6 +2,7 @@
 
 #include <random>
 #include <optional>
+#include <algorithm>
 #include "game-data.hpp"
 
 // Handles startup of game
@@ -31,7 +32,12 @@ class GameStartup {
         game.clear();
         picked_players_message = "PLAYERS-TAKEN\r\n";
         current_index = std::optional<std::size_t>(std::nullopt);
-        current_card = 0;
+    }
+    void reset(std::mt19937 &randomizer) {
+        game.clear();
+        picked_players_message = "PLAYERS-TAKEN\r\n";
+        std::shuffle(cards_list.begin(), cards_list.end(), randomizer);
+        current_index = std::optional<std::size_t>(std::nullopt);
     }
     private:
     StartState process_in_event(Player &player);
@@ -50,6 +56,5 @@ class GameStartup {
     std::string picked_players_message{"PLAYERS-TAKEN\r\n"};
     std::array<std::string, 22> cards_list;
     std::optional<std::size_t> current_index{std::nullopt};
-    std::size_t current_card = 0;
 
 };

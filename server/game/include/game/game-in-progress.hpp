@@ -66,5 +66,5 @@ class GameInProgress {
     enum {
         WaitingForCards,
         WaitingForTurnEnd,
-    } turn_state;
+    } turn_state = WaitingForCards;
 };

@@ -56,6 +56,7 @@ GameInProgress::GameInProgress(GameStartup &&startup) : game(std::move(startup.g
     for (Player &player : game.get_players()) {
         playerlist += player.name + ',';
     }
+    playerlist.pop_back();
     broadcast(playerlist + "\r\nTURN-START," + game.get_players()[0].name + "\r\n");
     is_valid = flush_out();
     if (!is_valid) {
@@ -94,6 +95,7 @@ bool GameInProgress::callback() {
             return current_player_msg();
         }
         else {
+            std::cerr << "goin to other player" << std::endl;
             return other_player_msg(ev.data.fd);
         }
     }
@@ -134,7 +136,7 @@ bool GameInProgress::other_player_msg(int fd) {
     }
 
     std::optional<std::size_t> msg_end = player.inbuf.get_msg_end();
-    if (!msg_end) {
+    if (!msg_end.has_value()) {
         if (player.inbuf.full()) {
             send_err_msg(MSG_ERR);
             return false; // sent too many chars
@@ -145,6 +147,7 @@ bool GameInProgress::other_player_msg(int fd) {
     }
 
     // now we have a valid message!
+    // this logic is bad and doesn't actually work!!!
     if (!check_cards_msg("HAVE-CARD,", player.inbuf, msg_end.value(), player.name)) {
         send_err_msg(MSG_ERR);
         return false;
@@ -155,6 +158,7 @@ bool GameInProgress::other_player_msg(int fd) {
         msg.push_back(player.inbuf[i]);
     }
     broadcast(msg);
+    player.inbuf.pop_front(msg_end.value());
     return flush_out();
 }
 
@@ -182,12 +186,14 @@ bool GameInProgress::current_player_msg() {
     // bug, never gets here. why?
     std::cerr << "pian" << std::endl;
 
+    std::cerr << current.name << std::endl;
     if (check_cards_msg("CARD-REQUEST,", current.inbuf, msg.value(), current.name) && turn_state == WaitingForCards) {
         turn_state = WaitingForTurnEnd;
         auto result = parse_cards("CARD-REQUEST,", current.inbuf, msg.value());
         current.inbuf.pop_front(msg.value());
         auto index = find_cardholder(result, game.get_players(), turn_index);
         std::string card_str(result[0] + ',' + result[1] + ',' + result[2]);
+        current.inbuf.pop_front(msg.value());
         if (!index.has_value()) {
             // player guessed the right cards
             broadcast("CARD-REQUEST-EMPTY," + current.name + ',' + card_str + "\r\n");
@@ -242,6 +248,7 @@ bool GameInProgress::handle_accuse(std::size_t msg_end) {
                 return false;
             }
             turn_index = search_res.value();
+            turn_state = WaitingForCards;
             break;
         }
     }

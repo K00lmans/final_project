@@ -34,7 +34,7 @@ class GameData {
     GameData &operator=(GameData &&data);
 
     void add_player(int fd) {
-        epoll_event ev{.events = EPOLLRDHUP, .data = {.fd = fd}};
+        epoll_event ev{.events = EPOLLRDHUP | EPOLLET, .data = {.fd = fd}};
         poll.ctl(EPOLL_CTL_ADD, fd, ev);
         players.emplace_back(fd);
     }

@@ -67,6 +67,7 @@ GameStartup::StartState GameStartup::process_in_event(Player &player) {
         if (!get_player_name(player.inbuf, msg_end.value(), player.name)) {
             return Error;
         }
+        player.inbuf.pop_front(msg_end.value());
         picked_players_message.pop_back();
         picked_players_message.pop_back();
         picked_players_message += ',' + player.name + "\r\n";
@@ -125,8 +126,8 @@ GameStartup::StartState GameStartup::initialize_new_player(Player &player) {
     case SocketStatus::Blocked:
         if (player.outbuf.empty()) {
             ev.events = EPOLLIN | EPOLLRDHUP | EPOLLET;
-            game.mod_poll_fd(player.fd, ev);
         }
+        game.mod_poll_fd(player.fd, ev);
         return NotReady;
     }
     return Error;

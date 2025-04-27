@@ -39,11 +39,13 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
         msgbuf[msg_len - 1] != '\n' ||
         msgbuf[msg_len - 2] != '\r'
     ) {
+        abort();
         return false;
     }
 
     for (std::size_t i = 0; i < header.size(); ++i) {
         if (msgbuf[i] != header[i]) {
+        abort();
             return false;
         }
     }
@@ -51,6 +53,7 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
     std::size_t i = header.size();
     while (true) {
         if (i == (msg_len - 2)) {
+        abort();
             return false; // ran out of message
         }
 
@@ -59,6 +62,7 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
                 break;
             }
             else {
+        abort();
                 return false; // didn't enter a valid string
             }
         }
@@ -69,11 +73,13 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
         str.clear();
         for (++i; msgbuf[i] != ',' && msgbuf[i] != '\r'; ++i) {
             if (i > msg_len - 2) {
+        abort();
                 return false;
             }
             str.push_back(msgbuf[i]);
         }
         if (!cards::cards_set.contains(str)) {
+        abort();
             return false;
         }
     }
