@@ -46,15 +46,15 @@ int main() {
     const auto background = sf::Sprite(background_image);
 
     // This was a function, but the smart pointers where making that hard
-    const unique_ptr<sf::Texture> character_textures[6] = {
-        make_unique<sf::Texture>(sf::Texture("client/graphics/colonel_mustard.jpg")),
-        make_unique<sf::Texture>(sf::Texture("client/graphics/miss_scarlet.jpg")),
-        make_unique<sf::Texture>(sf::Texture("client/graphics/professor_plum.jpg")),
-        make_unique<sf::Texture>(sf::Texture("client/graphics/mr_green.jpg")),
-        make_unique<sf::Texture>(sf::Texture("client/graphics/mrs_white.jpg")),
-        make_unique<sf::Texture>(sf::Texture("client/graphics/mrs_peacock.jpg"))};
-    const auto empty_texture = make_unique<sf::Texture>(sf::Texture("client/graphics/blank.png"));
-    const auto selection_texture = make_unique<sf::Texture>(sf::Texture("client/graphics/selection.png"));
+    const unique_ptr<const sf::Texture> character_textures[6] = {
+        make_unique<const sf::Texture>(sf::Texture("client/graphics/colonel_mustard.jpg")),
+        make_unique<const sf::Texture>(sf::Texture("client/graphics/miss_scarlet.jpg")),
+        make_unique<const sf::Texture>(sf::Texture("client/graphics/professor_plum.jpg")),
+        make_unique<const sf::Texture>(sf::Texture("client/graphics/mr_green.jpg")),
+        make_unique<const sf::Texture>(sf::Texture("client/graphics/mrs_white.jpg")),
+        make_unique<const sf::Texture>(sf::Texture("client/graphics/mrs_peacock.jpg"))};
+    const auto empty_texture = make_unique<const sf::Texture>(sf::Texture("client/graphics/blank.png"));
+    const auto selection_texture = make_unique<const sf::Texture>(sf::Texture("client/graphics/selection.png"));
     std::unique_ptr<sf::Sprite> board_squares[24][25];
     for (int x = 0; x < 24; x++) {
         for (int y = 0; y < 25; y++) {
@@ -113,8 +113,11 @@ int main() {
                             *character_textures[current_player]);
                         remove_item_from_vector(tiles_in_reach, tile); // Sets up for next line
                         for (const auto &unused_tile: tiles_in_reach) { // Resets textures
-                            change_sprite_texture(*board_squares[unused_tile.getX()][unused_tile.getY()],
-                                *empty_texture);
+                            if (&board_squares[unused_tile.getX()][unused_tile.getY()]->getTexture() ==
+                                selection_texture.get()) {
+                                change_sprite_texture(*board_squares[unused_tile.getX()][unused_tile.getY()],
+                                    *empty_texture);
+                            }
                         }
                         clue_board.placeToken(players[current_player]->characterToken,
                             players[current_player]->position);
