@@ -1,9 +1,9 @@
 #include <cstddef>
 #include <cerrno>
 #include <vector>
-#include <system_error>
 #include <unistd.h>
 #include <socket-handling/fd-utils.hpp>
+#include <socket-handling/fatal-error.hpp>
 
 constexpr std::size_t MAX_ALLOWED_EINTR = 128;
 
@@ -15,7 +15,7 @@ void close_except(int fd) {
             return;
         }
         if (retval == -1 && errno != EINTR) {
-            throw std::system_error(errno, std::generic_category(), "Could not close file descriptor.");
+            throw FatalError(errno, "Could not close file descriptor.");
         }
     }
 }

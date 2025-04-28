@@ -3,7 +3,7 @@
 
 namespace cards {
 
-const std::array<std::string, 6> suspects{
+const std::array<std::string, 6> suspects {
     "Colonel Mustard",
     "Miss Scarlet",
     "Professor Plum",
@@ -12,7 +12,7 @@ const std::array<std::string, 6> suspects{
     "Mrs. Peacock"
 };
 
-const std::array<std::string, 7> weapons{
+const std::array<std::string, 7> weapons {
     "Rope",
     "Lead Pipe",
     "Knife",
@@ -22,7 +22,7 @@ const std::array<std::string, 7> weapons{
     "Bottle of Poison",
 };
 
-const std::array<std::string, 9> rooms{
+const std::array<std::string, 9> rooms {
     "Study",
     "Hall",
     "Lounge",
@@ -60,4 +60,37 @@ const std::array<std::string, 22> all_cards {
     "Dining Room"
 };
 
+const std::unordered_set<std::string> cards_set {
+    "Colonel Mustard",
+    "Miss Scarlet",
+    "Professor Plum",
+    "Mr. Green",
+    "Mrs. White",
+    "Mrs. Peacock",
+    "Rope",
+    "Lead Pipe",
+    "Knife",
+    "Wrench",
+    "Candlestick",
+    "Revolver",
+    "Bottle of Poison",
+    "Study",
+    "Hall",
+    "Lounge",
+    "Library",
+    "Billiard Room",
+    "Conservatory",
+    "Ballroom",
+    "Kitchen",
+    "Dining Room"
+};
+
+const std::unordered_set<std::string> suspects_set {
+    "Colonel Mustard",
+    "Miss Scarlet",
+    "Professor Plum",
+    "Mr. Green",
+    "Mrs. White",
+    "Mrs. Peacock"
+};
 }

@@ -1,6 +1,6 @@
 #include <sys/timerfd.h>
-#include <system_error>
 #include <socket-handling/timer.hpp>
+#include <socket-handling/fatal-error.hpp>
 
 
 constexpr static inline itimerspec ms_to_itimerspec(int num_ms) {
@@ -17,13 +17,13 @@ constexpr static inline itimerspec ms_to_itimerspec(int num_ms) {
 }
 Timer::Timer() : fd(timerfd_create(CLOCK_MONOTONIC, 0)) {
     if (fd == -1) {
-        throw std::system_error(errno, std::generic_category(), "Could not create timer.");
+        throw FatalError(errno, "Could not create timer.");
     }
 }
 
 Timer::Timer(int num_ms) : fd(timerfd_create(CLOCK_MONOTONIC, 0)) {
     if (fd == -1) {
-        throw std::system_error(errno, std::generic_category(), "Could not create timer.");
+        throw FatalError(errno, "Could not create timer.");
     }
     set(num_ms);
 }
@@ -40,7 +40,7 @@ Timer &Timer::operator=(Timer &&timer) {
 void Timer::set(int num_ms) {
     itimerspec tm(ms_to_itimerspec(num_ms));
     if (timerfd_settime(fd, 0, &tm, NULL) == -1) {
-        throw std::system_error(errno, std::generic_category(), "Could not set timer.");
+        throw FatalError(errno, "Could not set timer.");
     }
 }
 
