@@ -65,6 +65,9 @@ void GameHandler::handle_gamestartup(GameStartup::StartState state) {
             running_games.erase(gamefd); // just get rid of the game if it had an error
         }
         pending_game = std::move(GameStartup(shut, randomizer));
+        ev.events = EPOLLIN | EPOLLERR;
+        ev.data.fd = pending_game.get_fd();
+        poll.ctl(EPOLL_CTL_ADD, pending_game.get_fd(), ev);
         break;
     }
 }

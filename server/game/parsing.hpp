@@ -71,7 +71,7 @@ std::optional<std::pair<std::string, std::string>> parse_have_card_msg(const Inp
 }
 
 template <std::size_t BUF_SIZE>
-bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_len, const std::string &playername) {
+bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_len) {
     if (
         header.size() >= (msg_len - 2) || 
         msgbuf.size() < msg_len ||
@@ -88,22 +88,6 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
     }
     std::string str;
     std::size_t i = header.size();
-    while (true) {
-        if (i == (msg_len - 2)) {
-            return false; // ran out of message
-        }
-
-        if (msgbuf[i] == ',') {
-            if (str == playername) {
-                break;
-            }
-            else {
-                return false; // didn't enter a valid string
-            }
-        }
-        str.push_back(msgbuf[i++]);
-    }
-
     for (int j = 0; j < 3; ++j) {
         str.clear();
         for (++i; msgbuf[i] != ',' && msgbuf[i] != '\r'; ++i) {
@@ -121,23 +105,11 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
 
 // presumes the message is a valid accuse-message
 template <std::size_t BUF_LEN>
-std::array<std::string, 3> parse_cards(const std::string &header, InputBuffer<BUF_LEN> &buf, std::size_t msg_len) {
+std::string parse_cards(const std::string &header, InputBuffer<BUF_LEN> &buf, std::size_t msg_len) {
     std::size_t i = header.size();
-    std::array<std::string, 3> result;
-    while (buf[i++] != ',') {} // skipping player message
-
-    while (buf[i] != ',') {
-        result[0].push_back(buf[i++]);
-    }
-    ++i;
-
-    while (buf[i] != ',') {
-        result[1].push_back(buf[i++]);
-    }
-    ++i;
-
+    std::string result;
     while (buf[i] != '\r') {
-        result[2].push_back(buf[i++]);
+        result.push_back(buf[i]);
     }
     return result;
 }

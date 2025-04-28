@@ -8,13 +8,22 @@ static const std::string CONN_ERR("A player encountered a connection error.");
 static const std::string INTERNAL_ERR("An unexpected server error occurred.");
 static const std::string MSG_ERR("A player sent an invalid message.");
 
-std::optional<std::size_t> find_cardholder(const std::array<std::string, 3> &search_cards, const std::vector<Player> &players, std::size_t current_player_index) {
-    for (const std::string &card : search_cards) {
+std::optional<std::size_t> find_cardholder(const std::string &search_cards, const std::vector<Player> &players, std::size_t current_player_index) {
+    std::size_t str_start = 0;
+    std::string_view search_cards_view(search_cards);
+    for (int i = 0; i < 3; ++i) {
+        // parsing for card
+        std::size_t next_comma = search_cards_view.find_first_of(",\r", str_start);
+        std::string_view next_card(search_cards_view.substr(str_start, next_comma));
+        str_start = next_comma + 1;
+
+        // finding card
         for (std::size_t i = 0; i < players.size(); ++i) {
-            if (
-                i != current_player_index && 
-                (std::find(players[i].cards.begin(), players[i].cards.end(), card) != players[i].cards.end())
-            ) {
+            if (i == current_player_index) {
+                continue;
+            }
+            const std::vector<std::string> &cards = players[i].cards;
+            if (std::find(cards.begin(), cards.end(), next_card) != cards.end()) {
                 return std::optional(i);
             }
         }
@@ -207,23 +216,22 @@ bool GameInProgress::current_player_msg() {
     std::cerr << "pian" << std::endl;
 
     std::cerr << current.name << std::endl;
-    if (check_cards_msg("CARD-REQUEST,", current.inbuf, msg.value(), current.name) && turn_state == WaitingForCards) {
+    if (check_cards_msg("CARD-REQUEST,", current.inbuf, msg.value()) && turn_state == WaitingForCards) {
         turn_state = WaitingForTurnEnd;
-        auto result = parse_cards("CARD-REQUEST,", current.inbuf, msg.value());
+        std::string result(parse_cards("CARD-REQUEST,", current.inbuf, msg.value()));
         current.inbuf.pop_front(msg.value());
         auto index = find_cardholder(result, game.get_players(), turn_index);
-        std::string card_str(result[0] + ',' + result[1] + ',' + result[2]);
         current.inbuf.pop_front(msg.value());
         if (!index.has_value()) {
-            // player guessed the right cards
-            broadcast("CARD-REQUEST-EMPTY," + current.name + ',' + card_str + "\r\n");
+            // player guessed the right cards (or all their cards)
+            broadcast("CARD-REQUEST-EMPTY," + current.name + ',' + result + "\r\n");
             return flush_out();
         }
         Player &found_player = game.get_players()[index.value()];
-        broadcast("CARD-REQUEST," + current.name + ',' + found_player.name + ',' + card_str + "\r\n");
+        broadcast("CARD-REQUEST," + current.name + ',' + found_player.name + ',' + result + "\r\n");
         return flush_out();
     }
-    else if (check_cards_msg("ACCUSE,", current.inbuf, msg.value(), current.name)) {
+    else if (check_cards_msg("ACCUSE,", current.inbuf, msg.value())) {
         if (!handle_accuse(msg.value())) {
             send_err_msg(MSG_ERR);
             return false;
@@ -232,6 +240,7 @@ bool GameInProgress::current_player_msg() {
     }
     else if (check_endturn_msg(current.inbuf, msg.value())) {
         current.inbuf.pop_front(msg.value());
+        turn_state = WaitingForCards;
         // do nothing, let fall through to broadcast
     }
     else {
@@ -253,24 +262,26 @@ std::optional<std::size_t> GameInProgress::search_for_players() const {
 }
 bool GameInProgress::handle_accuse(std::size_t msg_end) {
     Player &current = game.get_players()[turn_index];
-    auto result = parse_cards("ACCUSE,", current.inbuf, msg_end);
-    for (const std::string &card : result) {
-        if (!std::find(game.get_win_cards().begin(), game.get_win_cards().end(), card)) {
-            broadcast("ACCUSE-FAIL," + current.name + ',' + result[0] + ',' + result[1] + ',' + result[2] + "\r\n");
-            if (!flush_out()) {
-                send_err_msg(CONN_ERR);
-                return false;
-            }
-            players_in_game[turn_index] = false;
-            auto search_res(search_for_players());
-            if (!search_res.has_value()) {
-                send_ending_msg("All players have made a false accusation.");
-                return false;
-            }
-            turn_index = search_res.value();
-            turn_state = WaitingForCards;
-            break;
-        }
+
+    std::string result = parse_cards("ACCUSE,", current.inbuf, msg_end);
+    if (!find_cardholder(result, game.get_players(), 1234).has_value()) {
+        send_ending_msg(current.name + ",Successful accusation!");
+        return false; // game is done
     }
+
+    // we could find someone with the card the player guessed
+    broadcast("ACCUSE-FAIL," + current.name + ',' + result + "\r\n");
+    if (!flush_out()) {
+        send_err_msg(CONN_ERR);
+        return false;
+    }
+    players_in_game[turn_index] = false;
+    std::optional<std::size_t> search_res(search_for_players());
+    if (!search_res.has_value()) {
+        send_ending_msg("All players have made a false accusation.");
+        return false;
+    }
+    turn_index = search_res.value();
+    turn_state = WaitingForCards;
     return true;
 }

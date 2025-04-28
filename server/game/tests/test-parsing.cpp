@@ -56,21 +56,21 @@ static void test_get_player_name(void) {
 
 }
 
-bool cards_check_testrunner(const std::string &msg, const std::string &playername) {
+bool cards_check_testrunner(const std::string &msg) {
     InputBuffer<GOOD_BUF_SIZE> buf;
     init_input_buf(buf, msg.size());
     for (std::size_t i = 0; i < msg.size(); ++i) {
         buf[i] = msg[i];
     }
-    return check_cards_msg("CARD-REQUEST,", buf, msg.size(), playername);
+    return check_cards_msg("CARD-REQUEST,", buf, msg.size());
 }
 
 void test_check_cards_msg(void) {
-    assert(cards_check_testrunner("garbage header,Miss Scarlet,Mrs. White,Study,Rope\r\n", "Miss Scarlet") == false);
-    assert(cards_check_testrunner("CARD-REQUEST,Scarlet,Mrs. White,Study,Rope\r\n", "Miss Scarlet") == false);
-    assert(cards_check_testrunner("CARD-REQUEST,Mr. Green,Mrs. White,Study,Rope\r\n", "Miss Scarlet") == false);
-    assert(cards_check_testrunner("CARD-REQUEST,Miss Scarlet,Mrs. White,Study\r\n", "Miss Scarlet") == false);
-    assert(cards_check_testrunner("CARD-REQUEST,Miss Scarlet,Mrs. White,Study,Rope\r\n", "Miss Scarlet") == true);
+    assert(cards_check_testrunner("garbage header,Mrs. White,Study,Rope\r\n") == false);
+    assert(cards_check_testrunner("CARD-REQUEST,Study,Rope\r\n") == false);
+    assert(cards_check_testrunner("CARD-REQUEST,,Mrs. White,Rope\r\n") == false);
+    assert(cards_check_testrunner("CARD-REQUEST,dasfdafdsaf,Mrs. White,Study\r\n") == false);
+    assert(cards_check_testrunner("CARD-REQUEST,Mrs. White,Study,Rope\r\n") == true);
 }
 
 
