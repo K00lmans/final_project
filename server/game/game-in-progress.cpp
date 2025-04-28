@@ -207,8 +207,7 @@ bool GameInProgress::current_player_msg() {
         turn_state = HasRequestedCards;
         std::string result(parse_cards("CARD-REQUEST,", current.inbuf, msg.value()));
         current.inbuf.pop_front(msg.value());
-        auto index = find_cardholder(result, game.get_players(), turn_index);
-        current.inbuf.pop_front(msg.value());
+        std::optional<std::size_t> index(find_cardholder(result, game.get_players(), turn_index));
         if (!index.has_value()) {
             // player guessed the right cards (or all their cards)
             broadcast("CARD-REQUEST-EMPTY," + current.name + ',' + result + "\r\n");
@@ -229,6 +228,7 @@ bool GameInProgress::current_player_msg() {
     else if (check_endturn_msg(current.inbuf, msg.value())) {
         current.inbuf.pop_front(msg.value());
         // can deref the optional here because the check has already happened in the accuse
+        ++turn_index;
         turn_index = search_for_players().value();
         turn_state = HasNotRequestedCards;
         broadcast("TURN-START," + game.get_players()[turn_index].name + "\r\n");
@@ -271,8 +271,5 @@ bool GameInProgress::handle_accuse(std::size_t msg_end) {
         return false;
     }
 
-    // starting the next turn;
-    turn_index = search_res.value();
-    turn_state = HasNotRequestedCards;
     return true;
 }
