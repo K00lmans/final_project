@@ -31,20 +31,6 @@ std::optional<std::size_t> find_cardholder(const std::string &search_cards, cons
     return std::optional<std::size_t>(std::nullopt);
 }
 
-template <std::size_t BUF_SIZE>
-bool check_endturn_msg(const InputBuffer<BUF_SIZE> &buf, std::size_t msg_len) {
-    static const std::string END_TURN("END-TURN\r\n");
-    if (msg_len != END_TURN.size()) {
-        return false;
-    }
-    for (std::size_t i = 0; i < msg_len; ++i) {
-        if (buf[i] != END_TURN[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
 
 // This logic is kinda a dumpster fire tbh
 // There's so many error conditions that excessive early returns are the only option if I don't want extreme nesting

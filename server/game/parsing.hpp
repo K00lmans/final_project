@@ -114,3 +114,18 @@ std::string parse_cards(const std::string &header, InputBuffer<BUF_LEN> &buf, st
     }
     return result;
 }
+
+template <std::size_t BUF_SIZE>
+bool check_endturn_msg(const InputBuffer<BUF_SIZE> &buf, std::size_t msg_len) {
+    static const std::string END_TURN("END-TURN\r\n");
+    if (msg_len != END_TURN.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < msg_len; ++i) {
+        if (buf[i] != END_TURN[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
