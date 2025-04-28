@@ -61,3 +61,10 @@ The client only builds if `BUILD_CLIENT` is undefined or is defined to a true va
 
 Essentially, if you don't define these variables on the command line when configuring (as most IDEs don't), the project will default to just building the client, which is intended, as the server will fail to build on some systems. You must explicitly set `BUILD_SERVER` to `ON` to build the server, and `BUILD_CLIENT` to `OFF` to avoid building the client.
 
+# Notes
+
+`compile-docs` is a shell script to compile the documentation for this project.
+It uses `pandoc` so you'll want to have that installed.
+Just run it, and optionally pass it your desired file extension as the first argument.
+
+`configure-debug` is a shell script that configures a debug version of the server of this project.
