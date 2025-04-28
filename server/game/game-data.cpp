@@ -10,6 +10,9 @@ GameData::GameData(std::shared_ptr<Shutdown<>> shutdown, std::mt19937 &randomize
 }, shutdown_singleton(shutdown) {}
 
 GameData &GameData::operator=(GameData &&data) {
+        if (this == &data) {
+            return *this;
+        }
         for (Player &player : players) {
             shutdown_singleton->shutdown_sock(player.fd, std::move(player.outbuf));
         }

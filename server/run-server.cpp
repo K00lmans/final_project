@@ -2,7 +2,7 @@
 
 
 GameHandler::GameHandler(const std::string &port_no) : connfact(port_no) {
-    epoll_event ev{.events = EPOLLIN | EPOLLERR, .data = {.fd = -1}};
+    epoll_event ev{.events = EPOLLIN, .data = {.fd = -1}};
 
     ev.data.fd = connfact.get_fd();
     poll.ctl(EPOLL_CTL_ADD, connfact.get_fd(), ev);
@@ -41,6 +41,7 @@ void GameHandler::run_event() {
     else if (running_games.contains(eventfd)) {
         if (!running_games.at(eventfd).callback()) {
             running_games.erase(eventfd);
+            std::cerr << "erased game" << std::endl;
         }
     }
     else {
@@ -65,6 +66,9 @@ void GameHandler::handle_gamestartup(GameStartup::StartState state) {
             running_games.erase(gamefd); // just get rid of the game if it had an error
         }
         pending_game = std::move(GameStartup(shut, randomizer));
+        ev.events = EPOLLIN | EPOLLERR;
+        ev.data.fd = pending_game.get_fd();
+        poll.ctl(EPOLL_CTL_ADD, pending_game.get_fd(), ev);
         break;
     }
 }
