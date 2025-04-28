@@ -50,11 +50,11 @@ template <std::size_t INPUT_BUF_SIZE>
 void run_server(const std::string &port, rlim_t fd_limit) {
     rlimit lim;
     if (getrlimit(RLIMIT_NOFILE, &lim) == -1) {
-        throw std::system_error(errno, std::generic_category(), "Failed to get current RLIMIT_NOFILE settings.");
+        throw FatalError(errno, "Failed to get current RLIMIT_NOFILE settings.");
     }
     lim.rlim_cur = fd_limit;
     if (setrlimit(RLIMIT_NOFILE, &lim) == -1) {
-        throw std::system_error(errno, std::generic_category(), "Failed to set RLIMIT_NOFILE to desired value.");
+        throw FatalError(errno, "Failed to set RLIMIT_NOFILE to desired value.");
     }
 
     GameHandler handler("12345");

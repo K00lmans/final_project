@@ -32,6 +32,45 @@ bool get_player_name(const InputBuffer<BUF_SIZE> &msg_string, std::size_t msg_le
 }
 
 template <std::size_t BUF_SIZE>
+std::optional<std::pair<std::string, std::string>> parse_have_card_msg(const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_len) {
+    static const std::string MSG_HDR("HAVE-CARD,");
+    if (
+        MSG_HDR.size() >= (msg_len - 2) || 
+        msgbuf.size() < msg_len ||
+        msgbuf[msg_len - 1] != '\n' ||
+        msgbuf[msg_len - 2] != '\r'
+    ) {
+        return std::optional<std::pair<std::string, std::string>>(std::nullopt);
+    }
+    for (std::size_t i = 0; i < MSG_HDR.size(); ++i) {
+        if (msgbuf[i] != MSG_HDR[i]) {
+            return std::optional<std::pair<std::string, std::string>>(std::nullopt);
+        }
+    }
+    std::string playername;
+    std::string cardname;
+    std::size_t i = MSG_HDR.size();
+    while (msgbuf[i] != ',') {
+        if (i == msg_len - 2) {
+            return std::optional<std::pair<std::string, std::string>>(std::nullopt);
+        }
+        playername.push_back(msgbuf[i++]);
+    }
+    ++i;
+    for (; i < msg_len - 2; ++i) {
+        cardname.push_back(msgbuf[i]);
+    }
+    if (!cards::suspects_set.contains(playername)) {
+        return std::optional<std::pair<std::string, std::string>>(std::nullopt);
+    }
+    if (!cards::cards_set.contains(cardname)) {
+        return std::optional<std::pair<std::string, std::string>>(std::nullopt);
+    }
+
+    return std::optional(std::pair(playername, cardname));
+}
+
+template <std::size_t BUF_SIZE>
 bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msgbuf, std::size_t msg_len, const std::string &playername) {
     if (
         header.size() >= (msg_len - 2) || 
@@ -39,13 +78,11 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
         msgbuf[msg_len - 1] != '\n' ||
         msgbuf[msg_len - 2] != '\r'
     ) {
-        abort();
         return false;
     }
 
     for (std::size_t i = 0; i < header.size(); ++i) {
         if (msgbuf[i] != header[i]) {
-        abort();
             return false;
         }
     }
@@ -53,7 +90,6 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
     std::size_t i = header.size();
     while (true) {
         if (i == (msg_len - 2)) {
-        abort();
             return false; // ran out of message
         }
 
@@ -62,7 +98,6 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
                 break;
             }
             else {
-        abort();
                 return false; // didn't enter a valid string
             }
         }
@@ -73,13 +108,11 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
         str.clear();
         for (++i; msgbuf[i] != ',' && msgbuf[i] != '\r'; ++i) {
             if (i > msg_len - 2) {
-        abort();
                 return false;
             }
             str.push_back(msgbuf[i]);
         }
         if (!cards::cards_set.contains(str)) {
-        abort();
             return false;
         }
     }

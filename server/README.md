@@ -32,26 +32,14 @@ Some classes also disable default construction because, again, allowing default 
 
 Some things aren't designed the best - polling, especially.
 The `FdPoll` class is a *very* thin wrapper over `epoll` (and not even a good one, idk why I passed `epoll_event` in as a reference instead of a pointer, it's very inconvenient).
+More generally, this code (especially the game classes) is in dire need of a refactor, but with finals on the horizon I didn't quite have time for that.
 
-Also, some of the game classes (like Player) are just structs with public fields, which isn't the best design.
-They were designed this way since the alternative is to effectively have a bunch of trivial getters returning references to fields.
-The fields of a player are themselves nicely encapsulated so I felt that it was still mostly sensible.
-The external interface of the Game classes also don't take any Player structs, so even though the Player structs are public they're practically still an implementation detail and not something future code would ever mess with.
-
-Furthermore, the buffers are probably a bit more inefficient than necessary.
-`read(2)` and `write(2)` only do partial reads/writes in situations where they will block on the next call (thus meaning that edge-triggered epoll will send another notification when they're available again).
-So, a few system calls could probably be avoided there with a quick refactor.
-
-Also, having separate enum values for completed and blocked IO was kinda dumb in retrospect.
-Either will reset epoll; there is literally no difference between the two for my usecases here.
-Same for passing `InputBuffer`s around instead of just having the get message function return a std::string.
-It sounded like a good idea when I was originally writing the lower-level network/buffer management code, but it wasn't one in practice.
-
-I guess generally, error handling here could be improved.
+Also, error handling could be improved.
 Sockets have a lot of error states that are not really fatal to the application and might be expected to frequently occur, so I didn't feel exceptions were the right way to do error handling here (although they are used in cases of truly fatal errors).
-Monadic error handling (`std::expected`) would probably have been a good fit, but they're (a) a bit clunky and (b) not available everywhere yet.
+Monadic error handling (`std::expected`) would probably have been a good fit, but they're (a) a bit clunky in C++ and (b) not available everywhere yet.
 Also, they come with the downside of more copying in some cases, depending on what you're returning of course.
 I settled on return codes but they definitely have a lot of shortcomings, too.
+The real solution is probably to use a language with a better type system, maybe Rust (if you care about speed) or Haskell (if you don't).
 
 Finally, this code could probably be tested more rigorously than it currently is.
 There are some test cases (see the `game/tests` and `socket-handling/tests` directories), but network code is kinda just inherently hard to test.

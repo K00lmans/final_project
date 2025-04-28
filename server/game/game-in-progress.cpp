@@ -147,19 +147,39 @@ bool GameInProgress::other_player_msg(int fd) {
     }
 
     // now we have a valid message!
-    // this logic is bad and doesn't actually work!!!
-    if (!check_cards_msg("HAVE-CARD,", player.inbuf, msg_end.value(), player.name)) {
+    auto msg = parse_have_card_msg(player.inbuf, msg_end.value());
+    if (!msg.has_value()) {
         send_err_msg(MSG_ERR);
         return false;
     }
-    // now we can just send this message to every player
-    std::string msg;
-    for (std::size_t i = 0; i < msg_end.value(); ++i) {
-        msg.push_back(player.inbuf[i]);
+    SocketStatus status = SocketStatus::ZeroReturned;
+    for (Player &player : game.get_players()) {
+        if (player.name == msg.value().first) {
+            player.outbuf.add_message(
+            // msg is of form "HAVE-CARD,card name\r\n"
+                std::shared_ptr<std::string>(new std::string(
+                    "HAVE-CARD," + msg.value().second + "\r\n"
+                ))
+            );
+            status = player.outbuf.flush(player.fd);
+            break;
+        }
     }
-    broadcast(msg);
     player.inbuf.pop_front(msg_end.value());
-    return flush_out();
+    switch (status) {
+    case SocketStatus::Error:
+        send_err_msg(CONN_ERR);
+        return false;
+        break;
+    case SocketStatus::ZeroReturned:
+        send_err_msg(MSG_ERR);
+        return false;
+        break;
+    case SocketStatus::Finished:
+    case SocketStatus::Blocked:
+        break;
+    }
+    return true;
 }
 
 bool GameInProgress::current_player_msg() {  
