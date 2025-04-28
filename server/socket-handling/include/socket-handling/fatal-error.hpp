@@ -16,7 +16,7 @@ class FatalError : public std::exception {
             this->info.push_back(strerror_result[i]);
         }
     }
-    ~FatalError();
+    ~FatalError() {}
     const char *what() const noexcept { return info.c_str(); }
     private:
     int error_code;
