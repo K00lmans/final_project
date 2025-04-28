@@ -90,7 +90,7 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
     std::size_t i = header.size();
     for (int j = 0; j < 3; ++j) {
         str.clear();
-        for (++i; msgbuf[i] != ',' && msgbuf[i] != '\r'; ++i) {
+        for (; msgbuf[i] != ',' && msgbuf[i] != '\r'; ++i) {
             if (i > msg_len - 2) {
                 return false;
             }
@@ -99,6 +99,7 @@ bool check_cards_msg(const std::string &header, const InputBuffer<BUF_SIZE> &msg
         if (!cards::cards_set.contains(str)) {
             return false;
         }
+        ++i; // skip the ','
     }
     return true;
 }
@@ -109,7 +110,7 @@ std::string parse_cards(const std::string &header, InputBuffer<BUF_LEN> &buf, st
     std::size_t i = header.size();
     std::string result;
     while (buf[i] != '\r') {
-        result.push_back(buf[i]);
+        result.push_back(buf[i++]);
     }
     return result;
 }

@@ -64,7 +64,7 @@ class GameInProgress {
     std::size_t turn_index = 0;
     bool is_valid = true;
     enum {
-        WaitingForCards,
-        WaitingForTurnEnd,
-    } turn_state = WaitingForCards;
+        HasRequestedCards,
+        HasNotRequestedCards,
+    } turn_state = HasNotRequestedCards;
 };

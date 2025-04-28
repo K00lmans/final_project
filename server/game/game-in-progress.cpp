@@ -50,8 +50,9 @@ bool check_endturn_msg(const InputBuffer<BUF_SIZE> &buf, std::size_t msg_len) {
 // There's so many error conditions that excessive early returns are the only option if I don't want extreme nesting
 // either way the code is unreadable lol
 //
-// good luck reading this lol
-
+// it does hopefully work*, which is the important bit!
+//
+// better error handling in the lower levels of this application (or using a different architecture altogether, classic event-loop servers are kinda annoying) would probably have fixed this
 
 
 
@@ -165,7 +166,7 @@ bool GameInProgress::other_player_msg(int fd) {
     for (Player &player : game.get_players()) {
         if (player.name == msg.value().first) {
             player.outbuf.add_message(
-            // msg is of form "HAVE-CARD,card name\r\n"
+            // msg is of form "HAVE-CARD,target-playername,card name\r\n"
                 std::shared_ptr<std::string>(new std::string(
                     "HAVE-CARD," + msg.value().second + "\r\n"
                 ))
@@ -216,8 +217,8 @@ bool GameInProgress::current_player_msg() {
     std::cerr << "pian" << std::endl;
 
     std::cerr << current.name << std::endl;
-    if (check_cards_msg("CARD-REQUEST,", current.inbuf, msg.value()) && turn_state == WaitingForCards) {
-        turn_state = WaitingForTurnEnd;
+    if (check_cards_msg("CARD-REQUEST,", current.inbuf, msg.value()) && turn_state == HasNotRequestedCards) {
+        turn_state = HasRequestedCards;
         std::string result(parse_cards("CARD-REQUEST,", current.inbuf, msg.value()));
         current.inbuf.pop_front(msg.value());
         auto index = find_cardholder(result, game.get_players(), turn_index);
@@ -233,22 +234,24 @@ bool GameInProgress::current_player_msg() {
     }
     else if (check_cards_msg("ACCUSE,", current.inbuf, msg.value())) {
         if (!handle_accuse(msg.value())) {
-            send_err_msg(MSG_ERR);
+            // someone accused successfully (or an error occurred)
             return false;
         }
-        current.inbuf.pop_front(msg.value()); // can technically return without popping inbuf, but those are error states and will be cleaned up
+        current.inbuf.pop_front(msg.value());
+        return true; // gotta wait for END-TURN still
     }
     else if (check_endturn_msg(current.inbuf, msg.value())) {
         current.inbuf.pop_front(msg.value());
-        turn_state = WaitingForCards;
-        // do nothing, let fall through to broadcast
+        // can deref the optional here because the check has already happened in the accuse
+        turn_index = search_for_players().value();
+        turn_state = HasNotRequestedCards;
+        broadcast("TURN-START," + game.get_players()[turn_index].name + "\r\n");
+        return flush_out();
     }
     else {
         send_err_msg(MSG_ERR);
         return false;
     }
-    broadcast("TURN-START," + game.get_players()[turn_index].name + "\r\n");
-    return flush_out();
 };
 
 
@@ -281,7 +284,9 @@ bool GameInProgress::handle_accuse(std::size_t msg_end) {
         send_ending_msg("All players have made a false accusation.");
         return false;
     }
+
+    // starting the next turn;
     turn_index = search_res.value();
-    turn_state = WaitingForCards;
+    turn_state = HasNotRequestedCards;
     return true;
 }
