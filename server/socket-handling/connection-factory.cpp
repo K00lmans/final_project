@@ -1,12 +1,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <system_error>
 #include <fcntl.h>
 #include <cstring>
 
 #include <socket-handling/connection-factory.hpp>
 #include <socket-handling/fd-utils.hpp>
+#include <socket-handling/fatal-error.hpp>
 
 
 #include <iostream> // debugging
@@ -21,7 +21,12 @@ ConnectionFactory::ConnectionFactory(const std::string &port) : socket_fd(-1) {
     int true_val = 1;
     int retval = getaddrinfo(NULL, port.c_str(), &hints, &result);
     if (retval == -1) {
-        throw std::system_error(errno, std::generic_category(), gai_strerror(errno));
+        std::string errstring("getaddrinfo returned an error : ");
+        const char *err_cstr = gai_strerror(errno);
+        for (std::size_t i = 0; err_cstr[i] != '\0'; ++i) {
+            errstring.push_back(err_cstr[i]);
+        }
+        throw FatalError(-1, errstring);
     }
 
     for (addrinfo *addr = result; addr != NULL; addr = addr->ai_next) {
@@ -46,16 +51,16 @@ ConnectionFactory::ConnectionFactory(const std::string &port) : socket_fd(-1) {
 
     // now socket_fd is either a socket bound to a port or -1
     if (socket_fd == -1) {
-        throw std::system_error(errno, std::generic_category(), "Couldn't find an address to bind to.");
+        throw FatalError(errno, "Couldn't find an address to bind to");
     }
 
     // 4096 is the max value Linux 5.4+ can handle, might as well use that
     // most modern linux systems are probably above 5.4. hopefully.
     if (listen(socket_fd, 4096) == -1) {
-        throw std::system_error(errno, std::generic_category(), "Call to listen() failed fatally.");
+        throw FatalError(errno, "Call to listen() failed fatally.");
     }
     if (fcntl(socket_fd, F_SETFL, O_NONBLOCK) == -1) {
-        throw std::system_error(errno, std::generic_category(), "Could not set socket-descriptor to nonblocking.");
+        throw FatalError(errno, "Could not set socket-descriptor to nonblocking.");
     }
 }
 
@@ -82,10 +87,10 @@ std::optional<int> ConnectionFactory::get_new_connection() {
             return std::optional<int>(std::nullopt);
         }
         std::cerr << errno;
-        throw std::system_error(errno, std::generic_category(), "Call to accept() failed fatally.");
+        throw FatalError(errno, "Call to accept() failed fatally.");
     }
     if (fcntl(new_fd, F_SETFL, O_NONBLOCK) == -1) {
-        throw std::system_error(errno, std::generic_category(), "Could not set connection-descriptor to nonblocking.");
+        throw FatalError(errno, "Could not set socket descriptor to nonblocking.");
     }
     return std::optional(new_fd);
 }

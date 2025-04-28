@@ -18,6 +18,7 @@
 #include <socket-handling/output-buffer.hpp>
 #include <socket-handling/timer.hpp>
 #include <socket-handling/fd-poll.hpp>
+#include <socket-handling/fatal-error.hpp>
 
 template <std::size_t EPOLL_BUF_SIZE = 16, std::size_t CLOSE_TIME_MS = 10000>
 class Shutdown {
@@ -72,16 +73,13 @@ void Shutdown<EPOLL_BUF_SIZE, CLOSE_TIME_MS>::shutdown_sock(int fd, OutputBuffer
             map.try_emplace(fd, std::move(sock));
             break;
         case SocketStatus::ZeroReturned:
-            throw std::system_error(0, std::generic_category(), "Write returned 0 when trying to send closing message.");
+            throw FatalError(-1, "Write returned 0 when trying to send closing message.");
         case SocketStatus::Error:
-            throw std::system_error(errno, std::generic_category(), "Encountered a write error while closing socket.");
+            throw FatalError(errno, "Encountered a write error while closing socket.");
         }
     }
-    catch (const std::system_error &e) {
+    catch (const FatalError &e) {
         std::cerr << "Failed to shutdown socket, forceclosing. More info:\n" ;
-        if (e.code().value() != 0) {
-            std::cerr << strerror(e.code().value()) << "\n";
-        }
         std::cerr << e.what() << "\n" << std::endl;
         close_except(fd);
     }
