@@ -81,6 +81,7 @@ int main() {
 
         // Game maintenance
         if (!players[current_player]->playing) { // Skips over NPC's
+            prior_player = current_player; // Prevents it from freezing up if there is only one player
             current_player = (current_player + 1) % 6;
         }
         else if (current_player != prior_player) { // This means a new turn has rolled over
@@ -111,7 +112,7 @@ int main() {
                         // Add room code here
                         change_sprite_texture(*board_squares[tile.getX()][tile.getY()],
                             *character_textures[current_player]);
-                        remove_item_from_vector(tiles_in_reach, tile); // Sets up for next line
+                        remove_item_from_vector(tiles_in_reach, tile); // Sets up for reset
                         for (const auto &unused_tile: tiles_in_reach) { // Resets textures
                             if (&board_squares[unused_tile.getX()][unused_tile.getY()]->getTexture() ==
                                 selection_texture.get()) {
