@@ -97,10 +97,10 @@ std::vector<std::pair<sf::Text, sf::RectangleShape>> create_buttons(const unique
     return buttons;
 }
 
-// Finds all tiles you can move to from a given position with a given amount of movement
+// Finds all tiles you can move to from a given position with a given amount of movement. Initial position can not be a room
 std::vector<Tile> find_reachable_tiles(const Tile &position, const int movement, const Board &board) {
     std::vector<Tile> reachable_tiles;
-    if (movement == 0) {
+    if (movement == 0 || check_if_in_room(position, board)) {
         return reachable_tiles;
     }
     const auto new_tiles = board.getLegalMoves(position);
@@ -127,4 +127,28 @@ void change_sprite_texture(sf::Sprite &sprite, const sf::Texture &new_texture) {
     const auto new_size = static_cast<sf::Vector2<float>>(sprite.getTextureRect().size);
     // And finally use the old and new size to get the scaling factor to return it to the original size
     sprite.scale({original_size.x / new_size.x, original_size.y / new_size.y});
+}
+
+// Sets up all the sprites that tile the board
+void setup_board_sprites(std::unique_ptr<sf::Sprite> sprites[24][25]) {
+    for (int x = 0; x < 24; x++) {
+        for (int y = 0; y < 25; y++) {
+            sprites[x][y] = make_unique<sf::Sprite>(sf::Sprite(*empty_texture));
+            sprites[x][y]->setScale({static_cast<float>(square_size /
+                sprites[x][y]->getGlobalBounds().size.x), static_cast<float>(square_size /
+                    sprites[x][y]->getGlobalBounds().size.y)});
+            sprites[x][y]->setPosition({static_cast<float>(upper_board_corner[0] + x * square_size),
+                static_cast<float>(upper_board_corner[1] + y * square_size)});
+        }
+    }
+}
+
+// Checks if a location is in a room
+bool check_if_in_room(const Tile &location, const Board &board) {
+    for (const auto &room: board.getRooms()) {
+        if (room.isTileInRoom(location)) {
+            return true;
+        }
+    }
+    return false;
 }

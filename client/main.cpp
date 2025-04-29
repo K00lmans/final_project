@@ -40,32 +40,11 @@ int main() {
     // Then, since that may move the window off the screen, move it back to the center of the screen
     main_game_window.setPosition({static_cast<int>(screen_size.x / 2 - main_game_window.getSize().x / 2),
         static_cast<int>(screen_size.y / 2 - main_game_window.getSize().y / 2)});
-
-    auto background_image = sf::Texture("client/graphics/clue_board.jpg");
     background_image.setSmooth(true); // Can cause weird issues but should be fine since it is the background
     const auto background = sf::Sprite(background_image);
 
-    // This was a function, but the smart pointers where making that hard
-    const unique_ptr<const sf::Texture> character_textures[6] = {
-        make_unique<const sf::Texture>(sf::Texture("client/graphics/colonel_mustard.jpg")),
-        make_unique<const sf::Texture>(sf::Texture("client/graphics/miss_scarlet.jpg")),
-        make_unique<const sf::Texture>(sf::Texture("client/graphics/professor_plum.jpg")),
-        make_unique<const sf::Texture>(sf::Texture("client/graphics/mr_green.jpg")),
-        make_unique<const sf::Texture>(sf::Texture("client/graphics/mrs_white.jpg")),
-        make_unique<const sf::Texture>(sf::Texture("client/graphics/mrs_peacock.jpg"))};
-    const auto empty_texture = make_unique<const sf::Texture>(sf::Texture("client/graphics/blank.png"));
-    const auto selection_texture = make_unique<const sf::Texture>(sf::Texture("client/graphics/selection.png"));
     std::unique_ptr<sf::Sprite> board_squares[24][25];
-    for (int x = 0; x < 24; x++) {
-        for (int y = 0; y < 25; y++) {
-            board_squares[x][y] = make_unique<sf::Sprite>(sf::Sprite(*empty_texture));
-            board_squares[x][y]->setScale({static_cast<float>(square_size /
-                board_squares[x][y]->getGlobalBounds().size.x), static_cast<float>(square_size /
-                    board_squares[x][y]->getGlobalBounds().size.y)});
-            board_squares[x][y]->setPosition({static_cast<float>(upper_board_corner[0] + x * square_size),
-                static_cast<float>(upper_board_corner[1] + y * square_size)});
-        }
-    }
+    setup_board_sprites(board_squares);
     for (int player = 0; player < 6; player++) {
         change_sprite_texture(*board_squares[players[player]->position.getX()][players[player]->position.getY()],
             *character_textures[player]);

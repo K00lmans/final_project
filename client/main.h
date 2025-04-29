@@ -22,6 +22,7 @@
 #include "GameCode/Room.hpp"
 #include "GameCode/BoardSetup.hpp"
 #include "GameCode/Player.hpp"
+#include "Room_Container.h"
 
 // The proper ordering of characters
 typedef enum characters {
@@ -34,17 +35,32 @@ typedef enum characters {
 } Characters;
 
 // Global Variables
-inline double window_scaler = .75;// The scaler for the y size of the window based on the users screen. Can not be 1 or greater
-inline double background_size[2] = {1162.0, 1159.0}; // Size in pixels of the background image
-inline sf::Vector2u screen_size;
-inline sf::Font font("client/graphics/NotoSans-Black.ttf");
+// Game Data
 inline Token tokens[6] = {Token(TokenID::COL_MUSTARD), Token(TokenID::MS_SCARLET), Token(TokenID::PROF_PLUM),
     Token(TokenID::MR_GREEN), Token(TokenID::MRS_WHITE), Token(TokenID::MRS_PEACOCK)};
 inline Tile starting_positions[6] = {Tile(23, 7), Tile(16, 0), Tile(0, 5),
     Tile(9, 24), Tile(14, 24), Tile(0, 18)};
 inline auto rng_device = std::mt19937(std::random_device()());
-inline double square_size = 42;
-inline double upper_board_corner[2] = {75.5, 52};
+
+// Window Information
+inline double window_scaler = .75;// The scaler for the y size of the window based on the users screen. Can not be 1 or greater
+inline double background_size[2] = {1162.0, 1159.0}; // Size in pixels of the background image
+inline sf::Vector2u screen_size; // Is set in main
+inline double square_size = 42; // Size of square for spirte
+inline double upper_board_corner[2] = {75.5, 52}; // Start of where squares should tile
+
+// Textures
+inline auto background_image = sf::Texture("client/graphics/clue_board.jpg"); // Can't be const because changed in main
+inline const unique_ptr<const sf::Texture> character_textures[6] = {
+    make_unique<const sf::Texture>(sf::Texture("client/graphics/colonel_mustard.jpg")),
+    make_unique<const sf::Texture>(sf::Texture("client/graphics/miss_scarlet.jpg")),
+    make_unique<const sf::Texture>(sf::Texture("client/graphics/professor_plum.jpg")),
+    make_unique<const sf::Texture>(sf::Texture("client/graphics/mr_green.jpg")),
+    make_unique<const sf::Texture>(sf::Texture("client/graphics/mrs_white.jpg")),
+    make_unique<const sf::Texture>(sf::Texture("client/graphics/mrs_peacock.jpg"))};
+inline const auto empty_texture = make_unique<const sf::Texture>(sf::Texture("client/graphics/blank.png"));
+inline const auto selection_texture = make_unique<const sf::Texture>(sf::Texture("client/graphics/selection.png"));
+inline sf::Font font("client/graphics/NotoSans-Black.ttf");
 
 unsigned int get_window_x_size();
 
@@ -85,5 +101,9 @@ void remove_item_from_vector(std::vector<T> &vector, const T &element) {
     }
     vector = new_vector;
 }
+
+void setup_board_sprites(std::unique_ptr<sf::Sprite> sprites[24][25]);
+
+bool check_if_in_room(const Tile &location, const Board &board);
 
 #endif //MAIN_H
