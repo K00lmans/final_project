@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.12)
 
-add_library(sockfuncs sockfuncs.cpp sockfuncs.hpp)
+add_library(sockfuncs
+    sockfuncs.cpp
+    include/socket-handling/tests/sockfuncs.hpp
+)
+target_include_directories(sockfuncs PUBLIC include)
+target_compile_features(sockfuncs PUBLIC cxx_std_20)
 
 add_executable(test-sockfuncs test-sockfuncs.cpp)
 target_link_libraries(test-sockfuncs sockfuncs)
