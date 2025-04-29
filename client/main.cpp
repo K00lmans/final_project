@@ -40,8 +40,8 @@ int main() {
     // Then, since that may move the window off the screen, move it back to the center of the screen
     main_game_window.setPosition({static_cast<int>(screen_size.x / 2 - main_game_window.getSize().x / 2),
         static_cast<int>(screen_size.y / 2 - main_game_window.getSize().y / 2)});
-    background_image.setSmooth(true); // Can cause weird issues but should be fine since it is the background
-    const auto background = sf::Sprite(background_image);
+    background_image->setSmooth(true); // Can cause weird issues but should be fine since it is the background
+    const auto background = sf::Sprite(*background_image);
 
     std::unique_ptr<sf::Sprite> board_squares[24][25];
     setup_board_sprites(board_squares);
@@ -70,6 +70,8 @@ int main() {
             tiles_in_reach = find_reachable_tiles(players[current_player]->position,
                 generate_random_int(1, 6), clue_board); // This has to be at least O(n^n)
             for (const auto &tile: tiles_in_reach) {
+                // Don't need to worry about overwriting player sprite since the code automatically ignores tiles with a
+                // player in it
                 change_sprite_texture(*board_squares[tile.getX()][tile.getY()], *selection_texture);
             }
         }

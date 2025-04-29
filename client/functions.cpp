@@ -63,12 +63,12 @@ void pick_characters(unique_ptr<Player> player_list[6]) {
 }
 
 unique_ptr<sf::RectangleShape> create_standard_box() {
-    const auto standard = make_unique<sf::RectangleShape>(sf::RectangleShape({static_cast<float>(screen_size.x / 12.0), // 1/6th the window width
+    const auto standard = new sf::RectangleShape(sf::RectangleShape({static_cast<float>(screen_size.x / 12.0), // 1/6th the window width
         static_cast<float>(screen_size.y / 10.0)})); // 1/2 the window height
     standard->setOutlineThickness(screen_size.x / 360.0); // Should be three pixels on a 1080p screen
     standard->setOutlineColor(sf::Color::Black);
     standard->setFillColor(sf::Color(175, 175, 175));
-    return make_unique<sf::RectangleShape>(*standard); // Smart pointers confuse me
+    return make_unique<sf::RectangleShape>(*standard); // Should prevent memory leaks, I think?
 }
 
 std::vector<std::pair<sf::Text, sf::RectangleShape>> create_buttons(const unique_ptr<sf::RectangleShape> &standard) {
