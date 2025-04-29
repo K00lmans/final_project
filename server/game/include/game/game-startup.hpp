@@ -45,9 +45,12 @@ class GameStartup {
     StartState initialize_new_player(Player &player);
     void add_player_cards() {
         const std::size_t gamesize = game.get_players().size();
-        for (std::size_t i = 0; i < cards_list.size(); ++i) {
-            std::size_t index = gamesize - (i % gamesize) - 1;
-            game.get_players()[index].cards.push_back(cards_list[i]);
+        auto &win_cards = game.get_win_cards();
+        for (std::size_t i = 0, player_counter = 0; i < cards_list.size(); ++i) {
+            if (std::find(win_cards.begin(), win_cards.end(), cards_list[i]) == win_cards.end()) {
+                std::size_t index = gamesize - (player_counter++ % gamesize) - 1;
+                game.get_players()[index].cards.push_back(cards_list[i]);
+            }
         }
     }
     bool flush_player_cards();
