@@ -7,7 +7,7 @@
 // to ensure that these functions are equivalent to those they replace it's necessary to have a pile of globals that can be modified for testing purposes
 // also, these tests really ought to be run with valgrind to detect invalid memory accesses
 //
-// idk whether this will work when compiled with MSVC, but it's not my fault MSVC sucks lol
+// idk whether this will work when compiled with MSVC, but it's not my fault MSVC sucks
 
 #ifndef HIDE_READ_WRITE
 extern "C" {

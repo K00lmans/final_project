@@ -9,6 +9,7 @@ add_library(socket-handling STATIC
     include/socket-handling/fd-poll.hpp
     include/socket-handling/shutdown.hpp
     include/socket-handling/timer.hpp
+    include/socket-handling/fatal-error.hpp
     fd-utils.cpp
     output-buffer.cpp
     fd-poll.cpp

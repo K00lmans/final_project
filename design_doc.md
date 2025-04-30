@@ -37,108 +37,159 @@ The layout of the rooms will be stored as a tree data structure will all adjacen
 
 ## Server Architecture
 
-The server listens on port 55555 and uses a protocol described below.
+The server listens on port 12345 and uses a protocol described below.
 
 Each message in this protocol is delimited by a newline (CRLF).
 
 ## Protocol:
 
-### On connection
+The following section really *should* be written up as a BNF-style grammar, but I couldn't be bothered.
 
-Server will send to client all of the following messages in this exact order. Client may respond to messages at any point with its selected option.
+### Connection handshake
 
-```
-comma-separated list of available characters to select from
-list of cards in hand
-turn index (first turn has 0 index),total number of players
-```
-
-Client will respond with its selected character.
-
-When ready to start the game, a client must send a message with solely the text `START`.
-When there are at least 3 players and all players have sent the `START` message, the game will begin.
-
-Example messages (replace names of characters with the actual names, ofc):
-
-Server:
+When the server is ready for a newly-connected player to select a player, it will send a message of the following form:
 
 ```
-Character1,Character2,Character3
-Character5,Weapon1,Weapon6
-2,5
+PLAYERS-TAKEN,player1name,player2name
 ```
 
-Client:
+where `player1name` and `player2name` are names of players.
+This message is terminated with a CRLF-style newline, and the list may contain anywhere from 0-5 players.
+
+The client should then respond by picking a valid player not present in this list.
+Once they have, they can reply with a message as follows:
 
 ```
-Character3
+PLAYER-SELECT,playername
 ```
 
-### On player's turn
+This message contains just one player.
 
-Server will send a message to client containing solely the text `TURN,YourCharacter`, with the character replaced with your character's name.
-
-Client must then send a message containing a comma-separated list of the cards they want to ask for, followed by a message contianing position information.
-The position information message will then be sent to all other clients, prefixed with the client's character name and a single comma.
-
-Server will then respond with a message containing the player the card was taken from, a comma, followed by and the specific card that was found, or a message containing just the text `NONE` if none of the cards were found in anyone else's hand.
-
-Client can then send either an `ACCUSE` message or a message containing just the text `ENDTURN`.
-
-A client's guesses and accusations aren't checked to ensure that one card is a character, one is a weapon, and one is a location. That is done clientside (for now). Input validation may come later, but in any case the order in which characters, weapons, and locations are sent is unspecified.
-
-Example:
-
-Server:
+The client should then wait for enough others to connect.
+Once all necessary players have connected, the server will send the following messages in sequential order:
 
 ```
-YOURTURN
+PLAYER-CARDS,card1,card2,...
+PLAYERS-LIST,player1,player2,...
 ```
 
-Client:
+The `PLAYER-CARDS` message is followed by a comma-separated list of the specific client's cards.
+The `PLAYERS-LIST` message is followed by a comma-separated list of all the players in the game.
+
+After this, the game loop begins.
+
+### Game loop
+
+The game loop will loop until any of the following conditions occur:
+
+- A player makes a successful accusation
+- All players make unsuccessful accusations
+- An error condition occurs (at which point all connections are terminated)
+
+To start, the server will send the following to all clients:
 
 ```
-Character1,Weapon2,Location10\
-somesortofpositioninformationidk
+TURN-START,playername
 ```
 
-Server:
+where `playername` is the name of the player whose turn it is.
+If your name is not `playername`, responding is an error state and will likely terminate the connection.
+If you are `playername`, you have several options.
+
+At any point during your turn, you may choose to accuse, or to request to see a card. 
+This can be done in any order.
+
+#### Accusations
+
+To accuse, send the following:
 
 ```
-Character5,Location10
+ACCUSE,card1,card2,card3
 ```
 
-Client:
+If your accusation was correct, all players will receive a message as follows:
 
 ```
-ACCUSE,Character2,Weapon1,Location2
-```
-or
-```
-ENDTURN
+GAME-END,yourname,Successful accusation!
 ```
 
-### On another player's turn
+The connection will then terminate.
 
-Server will send a message to client containing solely the text `TURN,Character1`, where Character1 is the name of the character whose turn it currently is.
-
-Server will then send the client the updated position information of another player in one message.
-Server will then send the client a message of either of the following forms:
+If your accusation was incorrect, and everyone else has also made a false accusation, all players will receive the following:
 
 ```
-CARDREQUEST,card1,card2,card3
+GAME-END,All players have made a false accusation.
 ```
 
-or
+All connections will then terminate.
+
+
+If your accusation was incorrect, but others can still make accusations, all players will receive the following:
 
 ```
-CARDNOTICE,card1,card2,card3
+ACCUSE-FAIL,yourname,card1,card2,card3
 ```
 
-The three cards listed after each message are the ones that the other player asked for.
+From this point forward, you will never receive a TURN-START message with your playername.
+However, you may receive card requests, so keep your connection open.
 
-If the client receives a `CARDREQUEST` message, they are expected to respond with one card of theirs that they wish to show to the person who asked for it. This message should be a single message solely containing the name of the card they wish to show.
+#### Card requests
 
-If the client receives a `CARDNOTICE` message, it's possible that one of their cards was shown to the person who asked for it. They must manually check to see if they have any cards from the `CARDNOTICE` message if they want to display this information to the user. However, they SHALL NOT send a message containing the name of the card they want to show. The server already knows this information and it is pointless to ask for it.
+To request cards from another player, send the following message:
 
-If there's anything I forgot in this protocol please do let me know!
+```
+CARD-REQUEST,card1,card2,card3
+```
+
+This message will then be sent back to you and all other players, with some added info about who the cards were requested by and who must show their cards. That message will look as follows:
+
+```
+CARD-REQUEST,yourname,source-player,card1,card2,card3
+```
+
+Unless, of course, nobody else had any of your cards. In this case, you'll receive the following:
+
+```
+CARD-REQUEST-EMPTY,yourname,card1,card2,card3
+```
+
+You can request your own cards, however these will be ignored by the server; the server will never prompt you to show cards to yourself.
+Once the other player has decided which card of theirs to show, the server will send you the following:
+
+```
+HAVE-CARD,source-player,card
+```
+
+where source-player is the player who had the card.
+
+Finally, you must end your turn.
+You must do this even if your accusation failed!
+Send the following message:
+
+```
+END-TURN
+```
+
+After this, the loop will restart.
+
+#### If it is not your turn
+
+If it is not your turn, you will receive the `TURN-START`, `CARD-REQUEST`, `CARD-REQUEST-EMPTY`, `END-TURN`, `GAME-END`, and `ACCUSE-FAIL` messages described earlier.
+If someone else set your name as `source-player` in the `CARD-REQUEST`, you must select one of your cards and respond with the following:
+
+```
+HAVE-CARD,dest-player,card
+```
+
+### Error conditions
+
+If an error condition occurs, you may receive a message as follows:
+
+```
+ERR,error info string
+```
+
+If you receive this, a fatal error has occurred.
+You may not receive this; the socket might just close.
+This is because I haven't implemented these everywhere yet and don't really have time to before this is due.
+Error coverage might get better in future!
