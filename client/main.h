@@ -15,6 +15,7 @@
 #include <iostream>
 #include <random>
 
+#include "Room_Container.h"
 #include "Scratch_Pad.h"
 #include "GameCode/Token.hpp"
 #include "GameCode/TokenID.hpp"
@@ -22,7 +23,6 @@
 #include "GameCode/Room.hpp"
 #include "GameCode/BoardSetup.hpp"
 #include "GameCode/Player.hpp"
-#include "Room_Container.h"
 
 // The proper ordering of characters
 typedef enum characters {
@@ -72,8 +72,8 @@ inline const shared_ptr<const sf::Texture> character_textures[6] = {
     make_shared<const sf::Texture>(sf::Texture("client/graphics/mr_green.jpg")),
     make_shared<const sf::Texture>(sf::Texture("client/graphics/mrs_white.jpg")),
     make_shared<const sf::Texture>(sf::Texture("client/graphics/mrs_peacock.jpg"))};
-inline const auto empty_texture = make_shared<const sf::Texture>(sf::Texture("client/graphics/blank.png"));
-inline const auto selection_texture = make_shared<const sf::Texture>(sf::Texture("client/graphics/selection.png"));
+inline const auto empty_texture = make_shared<sf::Texture>(sf::Texture("client/graphics/blank.png"));
+inline const auto selection_texture = make_shared<sf::Texture>(sf::Texture("client/graphics/selection.png"));
 inline sf::Font font("client/graphics/NotoSans-Black.ttf");
 
 unsigned int get_window_x_size();
@@ -119,5 +119,7 @@ void remove_item_from_vector(std::vector<T> &vector, const T &element) {
 void setup_board_sprites(std::unique_ptr<sf::Sprite> sprites[24][25]);
 
 bool check_if_in_room(const Tile &location, const Board &board);
+
+std::optional<Room> get_current_room(const Tile &location, const Board &board);
 
 #endif //MAIN_H

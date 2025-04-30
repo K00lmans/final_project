@@ -49,6 +49,7 @@ int main() {
         change_sprite_texture(*board_squares[players[player]->position.getX()][players[player]->position.getY()],
             *character_textures[player]);
     }
+    auto room_containers = set_up_room_containers();
 
     Scratch_Pad::clear_data(); // Emptys old data
     unique_ptr<Scratch_Pad> current_users_pad;
@@ -66,9 +67,24 @@ int main() {
         else if (current_player != prior_player) { // This means a new turn has rolled over
             prior_player = current_player;
             current_users_pad = make_unique<Scratch_Pad>(screen_size, current_player + 1);
-            // This is an incredibly expensive operation so it should be run as little as possible
-            tiles_in_reach = find_reachable_tiles(players[current_player]->position,
-                generate_random_int(1, 6), clue_board); // This has to be at least O(n^n)
+            if (const auto current_room = get_current_room(players[current_player]->position, clue_board)) {
+                tiles_in_reach = current_room->getExits();
+                if (const int movement_left = generate_random_int(0 ,5)) {
+                    std::vector<Tile> additional_tiles;
+                    for (const auto &tile : tiles_in_reach) {
+                        for (const auto &new_tile: find_reachable_tiles(tile, movement_left, clue_board)) {
+                            additional_tiles.push_back(new_tile);
+                        }
+                    }
+                    for (const auto &new_tile: additional_tiles) {
+                        tiles_in_reach.push_back(new_tile);
+                    }
+                }
+            } else {
+                // This is an incredibly expensive operation so it should be run as little as possible
+                tiles_in_reach = find_reachable_tiles(players[current_player]->position,
+                    generate_random_int(1, 6), clue_board); // This has to be at least O(n^n)
+            }
             for (const auto &tile: tiles_in_reach) {
                 // Don't need to worry about overwriting player sprite since the code automatically ignores tiles with a
                 // player in it
@@ -85,15 +101,39 @@ int main() {
                 for (const auto &tile: tiles_in_reach) {
                     if (board_squares[tile.getX()][tile.getY()]->getGlobalBounds().contains(
                         main_game_window.mapPixelToCoords(mouse->position))) {
+                        if (const auto current_room = get_current_room(players[current_player]->position,
+                            clue_board)) {
+                            room_containers[room_numbers[current_room->getName()]]->
+                            remove_player_from_seat(character_textures[current_player].get());
+                        } else {
+                            change_sprite_texture(*board_squares[players[current_player]->position.getX()]
+                                [players[current_player]->position.getY()], *empty_texture);
+                        }
                         clue_board.deleteToken(players[current_player]->characterToken,
-                            players[current_player]->position);
-                        change_sprite_texture(*board_squares[players[current_player]->position.getX()]
-                            [players[current_player]->position.getY()], *empty_texture);
+                                players[current_player]->position);
                         players[current_player]->position = tile;
-                        // Add room code here
-                        change_sprite_texture(*board_squares[tile.getX()][tile.getY()],
-                            *character_textures[current_player]);
-                        remove_item_from_vector(tiles_in_reach, tile); // Sets up for reset
+
+                        bool entered_room = false;
+                        for (const auto &room: clue_board.getRooms()) {
+                            for (const auto &door: room.getDoors()) {
+                                if (players[current_player]->position == door) {
+                                    entered_room = true;
+                                    players[current_player]->position = room.getChair();
+                                    goto searched_rooms; // The sacred goto, passed down for generations
+                                }
+                            }
+                        }
+
+                        searched_rooms:
+
+                        if (entered_room) {
+                            room_containers[room_numbers[get_current_room(players[current_player]->position,
+                                clue_board)->getName()]]->add_player_to_seat(*character_textures[current_player]);
+                        } else {
+                            change_sprite_texture(*board_squares[tile.getX()][tile.getY()],
+                                *character_textures[current_player]);
+                            remove_item_from_vector(tiles_in_reach, tile); // Sets up for reset
+                        }
                         for (const auto &unused_tile: tiles_in_reach) { // Resets textures
                             if (&board_squares[unused_tile.getX()][unused_tile.getY()]->getTexture() ==
                                 selection_texture.get()) {
@@ -113,10 +153,13 @@ int main() {
         // Refresh and draw
         main_game_window.clear();
         main_game_window.draw(background);
-        for (auto &rows: board_squares) {
-            for (auto &squares: rows) {
+        for (const auto &rows: board_squares) {
+            for (const auto &squares: rows) {
                 main_game_window.draw(*squares);
             }
+        }
+        for (const auto &room_container: room_containers) {
+            room_container->draw(main_game_window);
         }
         main_game_window.display();
         if (current_users_pad != nullptr) {

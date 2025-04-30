@@ -152,3 +152,12 @@ bool check_if_in_room(const Tile &location, const Board &board) {
     }
     return false;
 }
+
+std::optional<Room> get_current_room(const Tile &location, const Board &board) {
+    for (const auto &room: board.getRooms()) {
+        if (room.isTileInRoom(location)) {
+            return room;
+        }
+    }
+    return {};
+}
