@@ -1,6 +1,6 @@
 #include "Room.hpp"
 
-Room::Room(string new_name) {
+Room::Room(const string &new_name) {
 	name = new_name;
 	//Room::addBounds(Tile(), Tile(), Tile(), Tile());
 
@@ -75,7 +75,7 @@ bool Room::isTileInRoom(Tile tile) const {
 		}
 
 		//cout << max_index * 10 + min_index;
-		bounds_iter++;
+		++bounds_iter;
 	}
 	return false;
 }

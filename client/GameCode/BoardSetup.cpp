@@ -117,7 +117,7 @@ void addCharacterFromStream(istream& boardFile, Board& newBoard) {
 	int tokenID = getTokenID(fragmentString);
 	
 
-	newBoard.placeToken(Token((TokenID)tokenID), getTileFromStream(boardFile));
+	newBoard.placeToken(Token(static_cast<TokenID>(tokenID)), getTileFromStream(boardFile));
 }
 
 Board getBoardFromFile() { // THIS IS MEANT TO READ THE FILE INTO A BOARD OBJECT!! REFACTOR!!
@@ -141,7 +141,6 @@ Board getBoardFromFile() { // THIS IS MEANT TO READ THE FILE INTO A BOARD OBJECT
 
 		if (dataLine.compare("CHARACTER") == 0) {
 			addCharacterFromStream(boardFile, newBoard);
-			continue;
 		}
 
 	}

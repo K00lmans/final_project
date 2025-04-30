@@ -14,6 +14,7 @@ Scratch_Pad::Scratch_Pad(const sf::Vector2u window_size, const int player_num) {
     // Creation of the window
     window = sf::RenderWindow(sf::VideoMode({window_size.x / 4, static_cast<unsigned>(window_size.y * .8)}),
                               "Scratch Pad", sf::Style::Titlebar);
+    window.setPosition({0, 0}); // Moves out of the way of the main window
 
     // Loading of the data
     filepath = "client/scratch_pads/player_" + std::to_string(player_num) + ".txt";

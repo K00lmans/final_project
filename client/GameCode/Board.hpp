@@ -7,7 +7,6 @@
 #define BOARD_HEIGHT 25
 
 class Board {
-private:
 	/* CLUE BOARD HAS A BORDER (signified by x)
 	*   1 2 3 4 5
 	* 1 x x x x x
@@ -25,23 +24,23 @@ private:
 
 public:
 	int* getBoard();
-	int getValueAtTile(Tile tile);
+	[[nodiscard]] int getValueAtTile(Tile tile) const;
 
-	void addRoom(Room newRoom);
+	void addRoom(const Room& newRoom);
 
-	const vector<Room>& getRooms() const;
+	[[nodiscard]] const vector<Room>& getRooms() const;
 
 	void placeToken(Token token, Tile tile);
 	void deleteToken(Token token, Tile tile);
-	void displayBoard();
+	void displayBoard() const;
 
-	vector<Tile> getLegalMoves(Tile startTile);
+	[[nodiscard]] vector<Tile> getLegalMoves(Tile startTile) const;
 };
 
 inline int* Board::getBoard() {
 	return &game_board[0][0];
 }
 
-inline int Board::getValueAtTile(Tile tile) {
+inline int Board::getValueAtTile(Tile tile) const {
 	return game_board[tile.getY()][tile.getX()];
 }
