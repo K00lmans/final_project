@@ -69,7 +69,7 @@ Just run it, and optionally pass it your desired file extension as the first arg
 
 `configure-debug` is a shell script that configures a debug version of the server of this project.
 
-## Play Instructions
+# Play Instructions
 
 Upon starting the game, you will be presented with a character select screen. Click on the boxes of the characters you would like to play as. Order does not matter. Once you have selected who you are playing as, press the done button or the window close button to start the game. This will happen automatically if all characters are selected.
 Once the game has started, the first player will be randomly chosen, identified by the red squares next to their token. Click on one of those red squares to move to that location. The next player's turn will then be automatically queued up.
